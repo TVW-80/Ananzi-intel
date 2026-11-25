@@ -131,10 +131,28 @@ test('caches, serves stale on failure, and never leaks the Shodan key', async ()
 });
 
 test('a first failure reports error with no points', async () => {
-  const mw = createThreatIntelMiddleware({ fetchImpl: async () => json({}, 503) });
+  let calls = 0;
+  const mw = createThreatIntelMiddleware({ fetchImpl: async () => { calls += 1; return json({}, 503); } });
   const r = await call(mw, '/feodo');
   assert.equal(r.body.status, 'error');
   assert.match(r.body.error, /HTTP 503/);
+  assert.equal(calls, 1, 'a real HTTP response is a genuine answer — never retried');
+});
+
+test('a transient connect timeout is retried and recovers', async () => {
+  let calls = 0;
+  const mw = createThreatIntelMiddleware({
+    fetchImpl: async () => {
+      calls += 1;
+      // First attempt: the exact connection-phase failure the News Events layer hit.
+      if (calls === 1)
+        throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'UND_ERR_CONNECT_TIMEOUT' } });
+      return json({ features: [] }); // valid (empty) GeoJSON on the retry
+    },
+  });
+  const r = await call(mw, '/incidents-news?focus=world');
+  assert.equal(calls, 2, 'retried once after the connect timeout');
+  assert.equal(r.body.status, 'ok', 'the retry turned a DEGRADED into a clean load');
 });
 
 test('a key pasted in POWER UP is used on the very next poll', async () => {

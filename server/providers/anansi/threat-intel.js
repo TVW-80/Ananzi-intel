@@ -30,6 +30,21 @@ const USER_AGENT = 'Anansi/1.0 (personal threat-intel dashboard)';
 const TIMEOUT_MS = 30_000;
 const MAX_BYTES = 25 * 1024 * 1024;
 const MIN = 60_000;
+// A connection-phase failure (slow/dropped TCP or TLS connect, a flaky DNS
+// answer) throws before any HTTP response, so the upstream did no work and a
+// retry is free — no duplicated request, no quota spent. GDELT's GEO endpoint
+// in particular likes to stall on connect (UND_ERR_CONNECT_TIMEOUT); one quick
+// retry usually turns that transient blip into a normal load instead of a
+// DEGRADED layer. We never retry a real HTTP response (4xx/5xx) — that's a
+// genuine answer from the server.
+const CONNECT_ATTEMPTS = 2; // 1 try + 1 retry on connection-phase failures
+const CONNECT_BACKOFF_MS = 500;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function isTransientConnect(code) {
+  return /UND_ERR_CONNECT_TIMEOUT|UND_ERR_SOCKET|ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|ENETUNREACH|EHOSTUNREACH|ENOTFOUND/i.test(
+    String(code || ''),
+  );
+}
 
 const env = (name, e) => String(e[name] || '').trim();
 
@@ -175,14 +190,20 @@ export function createThreatIntelMiddleware({
       return { feed: name, status: 'key-required', keyEnv: feed.keyEnv, updatedAt: null, error: `Needs ${feed.keyEnv} — paste it in POWER UP (bottom-right chip)`, points: [], total: 0 };
     }
     const label = req.redact ? `${name} upstream` : req.url;
+    const headers = { 'User-Agent': USER_AGENT, Accept: 'application/json', ...req.headers };
     let res;
-    try {
-      res = await fetchImpl(req.url, {
-        headers: { 'User-Agent': USER_AGENT, Accept: 'application/json', ...req.headers },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      });
-    } catch (err) {
-      throw new Error(`${name}: ${err?.cause?.code || err?.name || 'fetch failed'}`);
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        res = await fetchImpl(req.url, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
+        break;
+      } catch (err) {
+        const code = err?.cause?.code || err?.name || 'fetch failed';
+        if (attempt < CONNECT_ATTEMPTS && isTransientConnect(code)) {
+          await sleep(CONNECT_BACKOFF_MS * attempt);
+          continue;
+        }
+        throw new Error(`${name}: ${code}`);
+      }
     }
     if (!res.ok) {
       // Shodan blocks search filters (tag:ics, screenshot.label:webcam, port:…)
