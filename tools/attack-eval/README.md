@@ -47,25 +47,28 @@ ATT&CK Enterprise universe: **227 techniques, 479 sub-techniques, 15 tactics.**
 | --- | --- | --- | --- |
 | Active attribution (F.A.N.G.S today) | 12 | 5.3% | 9 / 15 |
 | Explains (feed-supplied id) | 55 | 24.2% | 15 / 15 |
-| **Sigma detection (new, verified vs ground truth)** | **72** | **31.7%** | **13 / 15** |
+| **Sigma detection (new, verified vs ground truth)** | **85** | **37.4%** | **13 / 15** |
 
-> The new Sigma detection engine **more than 5×'s** F.A.N.G.S's verified
-> attribution surface (12 → 72 techniques) and every one of those 72 is a
-> technique the engine *actually detected* on a labeled Atomic Red Team command.
+> The new Sigma detection engine **7×'s** F.A.N.G.S's verified attribution
+> surface (12 → 85 techniques) and every one of those 85 is a technique the
+> engine *actually detected* on a labeled Atomic Red Team event. It is
+> **multi-sensor**: `process_creation` (child-binary + command line) and
+> `ps_script` (PowerShell script-block text) — two log sources that can be
+> faithfully derived from an atomic without inventing telemetry.
 
 **ATT&CK drift found** (F.A.N.G.S references IDs retired in v20.1):
 `T1562 → T1685`, `T1562.001 → T1685`, `T1574.002 → T1574.001`.
 
-**Detection scoring** (2,460 labeled command events · 1,249 scored Sigma rules):
+**Detection scoring** (3,263 labeled events · 1,402 scored Sigma rules — process_creation 1,249 + ps_script 153):
 
 | Metric | Value |
 | --- | --- |
-| detector per-event **F1** | **26.8%** (alert-P 29.3% · R 24.7%) |
-| detection **breadth** | **72 / 119 = 60.5%** of rule-visible techniques caught ≥ once |
+| detector per-event **F1** | **27.5%** (alert-P 32.3% · R 23.9%) |
+| detection **breadth** | **85 / 122 = 69.7%** of rule-visible techniques caught ≥ once |
 
 ### Judge: F1 ≥ 0.80 → **BELOW BAR, reported honestly**
 
-The per-event attribution F1 is **0.268**, under the 0.80 target. That is a real,
+The per-event attribution F1 is **0.275**, under the 0.80 target. That is a real,
 informative result, and the *why* is the finding a SOC lead cares about:
 
 1. **Single sensor ceiling.** `process_creation` is one of Sigma's many log

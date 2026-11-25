@@ -99,39 +99,51 @@ export function buildCorpus(atomicsDir) {
       const command = fillArgs(ex.command, test.input_arguments);
       const windows = !shell.startsWith('/');
       const add = (ev) => {
-        const key = `${technique}|${ev.CommandLine}`;
+        const key = `${technique}|${ev.category}|${ev.CommandLine || ev.ScriptBlockText}`;
         if (ev && !seen.has(key)) { seen.add(key); events.push({ technique, name: test.name, platform: (test.supported_platforms || [])[0] || 'windows', ParentImage: shell, ...ev }); }
       };
       if (ex.name === 'powershell') {
-        // The script runs *inside* powershell.exe — model it as one powershell process.
         const cmd = command.replace(/\s+/g, ' ').trim().slice(0, 4000);
-        if (cmd) add({ Image: shell, OriginalFileName: 'powershell.exe', CommandLine: `powershell.exe ${cmd}` });
+        if (cmd) {
+          // Two sensors see one PowerShell atomic: the process (powershell.exe
+          // invocation) and the script-block log (the script text itself).
+          add({ category: 'process_creation', Image: shell, OriginalFileName: 'powershell.exe', CommandLine: `powershell.exe ${cmd}` });
+          add({ category: 'ps_script', Image: shell, OriginalFileName: 'powershell.exe', ScriptBlockText: cmd, CommandLine: cmd });
+        }
         continue;
       }
       // cmd/sh/bash: each command line spawns its own child process.
       const lines = command.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, MAX_LINES);
       for (const line of lines) {
         const child = childProcess(line, windows);
-        if (child) add(child);
+        if (child) add({ category: 'process_creation', ...child });
       }
     }
   }
   return events;
 }
 
-export function loadProcessCreationRules(sigmaDir) {
-  const roots = ['rules/windows/process_creation', 'rules/linux/process_creation', 'rules/macos/process_creation']
-    .map((r) => join(sigmaDir, r))
-    .filter(existsSync);
+// Sigma logsource category → rule dirs. Each category is a distinct sensor; a
+// rule only runs against events of its own category (gated in score()).
+const RULE_ROOTS = {
+  process_creation: ['rules/windows/process_creation', 'rules/linux/process_creation', 'rules/macos/process_creation'],
+  ps_script: ['rules/windows/powershell/powershell_script'], // ScriptBlockText == the atomic's script body
+};
+
+export function loadRules(sigmaDir, categories = ['process_creation', 'ps_script']) {
   const rules = [];
-  for (const root of roots) {
-    for (const file of walkYaml(root)) {
-      let doc;
-      try { doc = yaml.load(readFileSync(file, 'utf8')); } catch { continue; }
-      if (!doc || (doc.logsource || {}).category !== 'process_creation') continue;
-      const techs = ruleTechniques(doc);
-      if (!techs.length) continue; // only rules that name an ATT&CK technique can be scored
-      rules.push({ id: doc.id, title: doc.title, detection: doc.detection, tags: doc.tags, level: doc.level, techniques: techs });
+  for (const cat of categories) {
+    for (const rel of RULE_ROOTS[cat] || []) {
+      const root = join(sigmaDir, rel);
+      if (!existsSync(root)) continue;
+      for (const file of walkYaml(root)) {
+        let doc;
+        try { doc = yaml.load(readFileSync(file, 'utf8')); } catch { continue; }
+        if (!doc || (doc.logsource || {}).category !== cat) continue;
+        const techs = ruleTechniques(doc);
+        if (!techs.length) continue; // only rules that name an ATT&CK technique can be scored
+        rules.push({ id: doc.id, title: doc.title, detection: doc.detection, tags: doc.tags, level: doc.level, category: cat, techniques: techs });
+      }
     }
   }
   return rules;
@@ -140,12 +152,15 @@ export function loadProcessCreationRules(sigmaDir) {
 export function score(corpus, rules, { onlyCovered = false } = {}) {
   const coveredTechs = new Set(rules.flatMap((r) => r.techniques));
   const rows = onlyCovered ? corpus.filter((e) => coveredTechs.has(e.technique)) : corpus;
+  // A rule only sees events from its own log source (sensor).
+  const byCat = new Map();
+  for (const r of rules) { if (!byCat.has(r.category)) byCat.set(r.category, []); byCat.get(r.category).push(r); }
   let correct = 0, fired = 0; // event-level: alerted at all / alerted with the right technique
   let tpStrict = 0, fpStrict = 0, fnStrict = 0; // strict multi-label (co-labels counted as FP)
   const perTech = new Map(); // tech -> {events, detected}
   for (const e of rows) {
     const predicted = new Set();
-    for (const r of rules) if (ruleFires(r, e)) for (const t of r.techniques) predicted.add(t);
+    for (const r of byCat.get(e.category) || []) if (ruleFires(r, e)) for (const t of r.techniques) predicted.add(t);
     const hit = predicted.has(e.technique);
     if (predicted.size) fired += 1;
     correct += hit ? 1 : 0;
@@ -175,13 +190,14 @@ function main() {
   const atomicsDir = join(DATA, 'atomic-red-team', 'atomics');
   const sigmaDir = join(DATA, 'sigma');
   const corpus = buildCorpus(atomicsDir);
-  const rules = loadProcessCreationRules(sigmaDir);
+  const rules = loadRules(sigmaDir, ['process_creation', 'ps_script']);
   const limit = Number(arg('--limit', '0'));
   const rows = limit ? corpus.slice(0, limit) : corpus;
 
   console.log('── F.A.N.G.S SIGMA DETECTION SCORING ───────────────────────────────');
   console.log(`corpus: ${rows.length} labeled command events (Atomic Red Team)`);
-  console.log(`detector: ${rules.length} Sigma process_creation rules carrying an ATT&CK technique`);
+  const byCat = rules.reduce((m, r) => (m[r.category] = (m[r.category] || 0) + 1, m), {});
+  console.log(`detector: ${rules.length} Sigma rules carrying an ATT&CK technique (${Object.entries(byCat).map(([c, n]) => `${c} ${n}`).join(', ')})`);
   console.log(`distinct techniques — in corpus: ${new Set(rows.map((e) => e.technique)).size}, covered by a rule: ${new Set(rules.flatMap((r) => r.techniques)).size}\n`);
 
   const full = score(rows, rules, { onlyCovered: false });

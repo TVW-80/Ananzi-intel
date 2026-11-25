@@ -441,6 +441,12 @@
       "enabled": true
     },
     {
+      "techniqueID": "T1020",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
       "techniqueID": "T1021",
       "score": 1,
       "color": "#3fa7ff",
@@ -484,6 +490,12 @@
     },
     {
       "techniqueID": "T1047",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1048",
       "score": 1,
       "color": "#3fa7ff",
       "enabled": true
@@ -573,6 +585,12 @@
       "enabled": true
     },
     {
+      "techniqueID": "T1098",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
       "techniqueID": "T1105",
       "score": 1,
       "color": "#3fa7ff",
@@ -586,6 +604,18 @@
     },
     {
       "techniqueID": "T1112",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1113",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1114",
       "score": 1,
       "color": "#3fa7ff",
       "enabled": true
@@ -645,7 +675,19 @@
       "enabled": true
     },
     {
+      "techniqueID": "T1137",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
       "techniqueID": "T1197",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1201",
       "score": 1,
       "color": "#3fa7ff",
       "enabled": true
@@ -711,6 +753,18 @@
       "enabled": true
     },
     {
+      "techniqueID": "T1491",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1497",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
       "techniqueID": "T1505",
       "score": 1,
       "color": "#3fa7ff",
@@ -724,6 +778,12 @@
     },
     {
       "techniqueID": "T1529",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1531",
       "score": 1,
       "color": "#3fa7ff",
       "enabled": true
@@ -777,6 +837,12 @@
       "enabled": true
     },
     {
+      "techniqueID": "T1556",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
       "techniqueID": "T1558",
       "score": 1,
       "color": "#3fa7ff",
@@ -813,7 +879,19 @@
       "enabled": true
     },
     {
+      "techniqueID": "T1571",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
       "techniqueID": "T1572",
+      "score": 1,
+      "color": "#3fa7ff",
+      "enabled": true
+    },
+    {
+      "techniqueID": "T1573",
       "score": 1,
       "color": "#3fa7ff",
       "enabled": true
