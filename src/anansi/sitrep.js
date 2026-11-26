@@ -12,6 +12,7 @@
 import { createAttackHeatmap } from './attackHeatmap.js';
 import { createVulnScorecard } from './vulnScorecard.js';
 import { createServiceBoard } from './serviceStatus.js';
+import { createCoverageBoard } from './coverageBoard.js';
 import { createPwnedCheck } from './pwnedCheck.js';
 import { createReconBoard } from './reconBoard.js';
 
@@ -184,6 +185,7 @@ export function createSitrep(doc = document, { fetchImpl = (...a) => globalThis.
   close.setAttribute('aria-label', 'Close SITREP');
   head.append(title, close);
   const heat = createAttackHeatmap(doc); // live ATT&CK heat map at the top
+  const coverage = createCoverageBoard(doc); // measured ATT&CK coverage + detection scorecard
   const vulnScore = createVulnScorecard(doc); // CySA+ patch-priority queue
   const serviceBoard = createServiceBoard(doc); // "is it down right now" board
   const pwnedCheck = createPwnedCheck(doc); // keyless k-anonymity password check
@@ -194,7 +196,7 @@ export function createSitrep(doc = document, { fetchImpl = (...a) => globalThis.
   const empty = el(doc, 'p', 'sitrep-empty', 'Waiting for the first intel to roll in…');
   // RECON lives in its own panel (mounted by the HUD via api.reconElement); the
   // SITREP pane keeps the compact boards.
-  panel.append(head, heat.element, vulnScore.element, serviceBoard.element, pwnedCheck.element, roll, empty);
+  panel.append(head, heat.element, coverage.element, vulnScore.element, serviceBoard.element, pwnedCheck.element, roll, empty);
 
   let attackBody = null;
   let aiSnapshot = null;

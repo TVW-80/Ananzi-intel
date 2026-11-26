@@ -1627,6 +1627,46 @@ body:not(.ananzi-menu-open) #locale-picker { display: none !important; }
 }
 .vuln-score-empty { font-size: 10px; color: var(--text-secondary); }
 
+/* FANGS measured ATT&CK coverage + detection scorecard (tools/attack-eval). */
+.atk-cov { padding: 8px 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
+.atk-cov-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px;
+}
+.atk-cov.collapsed .atk-cov-head { margin-bottom: 0; }
+.atk-cov.collapsed .atk-cov-body { display: none; }
+.atk-cov-headL { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.atk-cov-toggle {
+  flex: none; background: none; border: none; cursor: pointer; padding: 0 2px;
+  color: #f4cf5e; font-size: 9px; line-height: 1; font-family: var(--font-mono);
+  transition: transform 0.15s ease;
+}
+.atk-cov-toggle:hover { color: var(--text-primary); }
+.atk-cov.collapsed .atk-cov-toggle { transform: rotate(-90deg); }
+.atk-cov-title { font-size: 9px; letter-spacing: 0.12em; color: #f4cf5e; }
+.atk-cov-tally { font-family: var(--font-mono); font-size: 9px; color: var(--text-secondary); white-space: nowrap; }
+.atk-cov-body { display: flex; flex-direction: column; gap: 4px; }
+.atk-cov-sub { font-family: var(--font-mono); font-size: 9px; color: var(--text-secondary); }
+.atk-cov-row { display: grid; grid-template-columns: 116px 1fr auto; align-items: center; gap: 8px; }
+.atk-cov-name { font-size: 10px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atk-cov-bar { position: relative; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.07); overflow: hidden; }
+.atk-cov-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; }
+.atk-cov-val { font-family: var(--font-mono); font-size: 9px; color: var(--text-secondary); white-space: nowrap; }
+.atk-cov-score {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+  padding-top: 4px; border-top: 1px dashed rgba(212, 175, 55, 0.18);
+}
+.atk-cov-score-h { font-size: 9px; letter-spacing: 0.1em; color: #f4cf5e; }
+.atk-cov-badge {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 3px;
+}
+.atk-cov-badge.ok { color: #0b0a08; background: #3fd07a; }
+.atk-cov-badge.below { color: #ff8a1f; border: 1px solid rgba(255, 138, 31, 0.6); }
+.atk-cov-score-detail { font-family: var(--font-mono); font-size: 9px; color: var(--text-secondary); line-height: 1.4; }
+.atk-cov-drift { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
+.atk-cov-drift-h { font-family: var(--font-mono); font-size: 9px; color: #ff8a1f; letter-spacing: 0.08em; }
+.atk-cov-drift-item { font-family: var(--font-mono); font-size: 9px; color: var(--text-secondary); }
+.atk-cov-src { font-family: var(--font-mono); font-size: 8px; color: var(--text-secondary); opacity: 0.75; margin-top: 2px; }
+
 /* FANGS service / outage status board (statuspage.io — the honest Downdetector). */
 .svc-status { padding: 8px 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
 .svc-status-head {
