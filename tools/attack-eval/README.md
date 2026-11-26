@@ -77,16 +77,17 @@ it ran. This is how a detection team actually measures coverage.
 
 | Metric | Value |
 | --- | --- |
-| **dataset detection recall** | **57.3%** (55 / 96 captures detected) |
-| technique breadth | 62.5% (20 / 32 labeled techniques caught) |
+| **dataset detection recall** | **57.9%** (55 / 95 captures detected) |
+| technique breadth | 64.5% (20 / 31 labeled techniques caught) |
 | alert precision (coarse) | 23.8% |
 | sensors contributing | process_creation · create_remote_thread · ps_module · registry · network · process_access |
 
 Moving from a single-sensor command corpus to multi-sensor real telemetry **more
-than doubled detection** (≈25% → 57.3%), and every sensor carries weight. Judge
-(detection recall ≥ 0.80): **BELOW BAR at 0.573, reported honestly** — the
-remaining gap is techniques with no rule in the captured sensor and Empire /
-classic-PowerShell (EventID 800) activity not yet mapped.
+than doubled detection** (≈25% → 57.9%), and every sensor carries weight. Judge
+(detection recall ≥ 0.80): **BELOW BAR at 0.579, reported honestly**. The eval
+prints the exact gap — the 11 undetected techniques (T1012, T1049, T1056, T1110,
+T1123, T1135, T1210, T1222, T1550, T1558, and T1562, which ATT&CK v20.1 retired)
+— so closing it is a concrete to-do list, not a mystery.
 
 ### Command-corpus judge: F1 ≥ 0.80 → **BELOW BAR, reported honestly**
 

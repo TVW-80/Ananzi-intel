@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-11-26T06:26:35.681Z",
-  "datasets": 96,
+  "generatedAt": "2026-11-26T06:42:08.430Z",
+  "datasets": 95,
   "rules": 2189,
   "logSources": 33,
-  "eventsScored": 462148,
-  "datasetDetectionRecall": 0.5729,
+  "eventsScored": 461974,
+  "datasetDetectionRecall": 0.5789,
   "detectedDatasets": 55,
-  "techniqueBreadth": 0.625,
+  "techniqueBreadth": 0.6452,
   "techniquesDetected": 20,
-  "techniquesLabeled": 32,
+  "techniquesLabeled": 31,
   "alertPrecision": 0.238,
-  "f1": 0.3363,
+  "f1": 0.3374,
   "detectedTechniques": [
     "T1003",
     "T1021",
@@ -33,10 +33,430 @@
     "T1548",
     "T1574"
   ],
+  "undetectedTechniques": [
+    "T1012",
+    "T1049",
+    "T1056",
+    "T1110",
+    "T1123",
+    "T1135",
+    "T1210",
+    "T1222",
+    "T1550",
+    "T1558",
+    "T1562"
+  ],
+  "undetectedCaptures": [
+    {
+      "id": "SDWIN-190301125905",
+      "techniques": [
+        "T1222"
+      ],
+      "fired": [
+        "T1482",
+        "T1087",
+        "T1069",
+        "T1059"
+      ]
+    },
+    {
+      "id": "SDWIN-190301174830",
+      "techniques": [
+        "T1003"
+      ],
+      "fired": [
+        "T1033",
+        "T1087"
+      ]
+    },
+    {
+      "id": "SDWIN-190319020147",
+      "techniques": [
+        "T1069"
+      ],
+      "fired": [
+        "T1087"
+      ]
+    },
+    {
+      "id": "SDWIN-190319021158",
+      "techniques": [
+        "T1087"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-190319131123",
+      "techniques": [
+        "T1550"
+      ],
+      "fired": [
+        "T1033",
+        "T1087",
+        "T1003",
+        "T1202",
+        "T1201"
+      ]
+    },
+    {
+      "id": "SDWIN-190518201207",
+      "techniques": [
+        "T1069"
+      ],
+      "fired": [
+        "T1087"
+      ]
+    },
+    {
+      "id": "SDWIN-190518202151",
+      "techniques": [
+        "T1003"
+      ],
+      "fired": [
+        "T1033",
+        "T1087"
+      ]
+    },
+    {
+      "id": "SDWIN-190518211052",
+      "techniques": [
+        "T1021"
+      ],
+      "fired": [
+        "T1036",
+        "T1059",
+        "T1112",
+        "T1491",
+        "T1564",
+        "T1685"
+      ]
+    },
+    {
+      "id": "SDWIN-190518230752",
+      "techniques": [
+        "T1003"
+      ],
+      "fired": [
+        "T1033",
+        "T1087",
+        "T1558"
+      ]
+    },
+    {
+      "id": "SDWIN-190518235535",
+      "techniques": [
+        "T1003"
+      ],
+      "fired": [
+        "T1033",
+        "T1087",
+        "T1555",
+        "T1552"
+      ]
+    },
+    {
+      "id": "SDWIN-190519005224",
+      "techniques": [
+        "T1049"
+      ],
+      "fired": [
+        "T1201",
+        "T1482",
+        "T1087",
+        "T1069",
+        "T1059"
+      ]
+    },
+    {
+      "id": "SDWIN-190625103712",
+      "techniques": [
+        "T1003"
+      ],
+      "fired": [
+        "T1033",
+        "T1087"
+      ]
+    },
+    {
+      "id": "SDWIN-200609225055",
+      "techniques": [
+        "T1123"
+      ],
+      "fired": [
+        "T1059"
+      ]
+    },
+    {
+      "id": "SDWIN-200805020926",
+      "techniques": [
+        "T1003"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-200805034820",
+      "techniques": [
+        "T1021"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-200806012009",
+      "techniques": [
+        "T1021"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-200806015757",
+      "techniques": [
+        "T1021"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-200806022635",
+      "techniques": [
+        "T1021"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-200806031938",
+      "techniques": [
+        "T1021"
+      ],
+      "fired": [
+        "T1059"
+      ]
+    },
+    {
+      "id": "SDWIN-200806130039",
+      "techniques": [
+        "T1069"
+      ],
+      "fired": [
+        "T1001"
+      ]
+    },
+    {
+      "id": "SDWIN-200916232559",
+      "techniques": [
+        "T1210"
+      ],
+      "fired": [
+        "T1059",
+        "T1003"
+      ]
+    },
+    {
+      "id": "SDWIN-200917174542",
+      "techniques": [
+        "T1021"
+      ],
+      "fired": [
+        "T1547",
+        "T1036",
+        "T1203",
+        "T1204"
+      ]
+    },
+    {
+      "id": "SDWIN-200918145959",
+      "techniques": [
+        "T1021"
+      ],
+      "fired": [
+        "T1201",
+        "T1036",
+        "T1203"
+      ]
+    },
+    {
+      "id": "SDWIN-200922042230",
+      "techniques": [
+        "T1003"
+      ],
+      "fired": [
+        "T1027"
+      ]
+    },
+    {
+      "id": "SDWIN-201020013208",
+      "techniques": [
+        "T1056"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-201021001911",
+      "techniques": [
+        "T1562"
+      ],
+      "fired": [
+        "T1686",
+        "T1036"
+      ]
+    },
+    {
+      "id": "SDWIN-201023020513",
+      "techniques": [
+        "T1218"
+      ],
+      "fired": [
+        "T1574",
+        "T1055"
+      ]
+    },
+    {
+      "id": "SDWIN-201026235835",
+      "techniques": [
+        "T1055"
+      ],
+      "fired": [
+        "T1003",
+        "T1202"
+      ]
+    },
+    {
+      "id": "SDWIN-201028191914",
+      "techniques": [
+        "T1055"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-201029001615",
+      "techniques": [
+        "T1059"
+      ],
+      "fired": [
+        "T1686"
+      ]
+    },
+    {
+      "id": "SDWIN-201102041306",
+      "techniques": [
+        "T1059"
+      ],
+      "fired": []
+    },
+    {
+      "id": "SDWIN-201102163918",
+      "techniques": [
+        "T1012"
+      ],
+      "fired": [
+        "T1526",
+        "T1087",
+        "T1083"
+      ]
+    },
+    {
+      "id": "SDWIN-201219075059",
+      "techniques": [
+        "T1053"
+      ],
+      "fired": [
+        "T1036",
+        "T1202",
+        "T1059",
+        "T1134",
+        "T1003",
+        "T1027"
+      ]
+    },
+    {
+      "id": "SDWIN-220630130349",
+      "techniques": [
+        "T1562"
+      ],
+      "fired": [
+        "T1036",
+        "T1685",
+        "T1006",
+        "T1202"
+      ]
+    },
+    {
+      "id": "SDWIN-220703123711",
+      "techniques": [
+        "T1562"
+      ],
+      "fired": [
+        "T1036",
+        "T1202"
+      ]
+    },
+    {
+      "id": "SDWIN-220705170038",
+      "techniques": [
+        "T1562"
+      ],
+      "fired": [
+        "T1036",
+        "T1204",
+        "T1202",
+        "T1685"
+      ]
+    },
+    {
+      "id": "SDWIN-220708104215",
+      "techniques": [
+        "T1562"
+      ],
+      "fired": [
+        "T1036",
+        "T1204",
+        "T1059",
+        "T1021",
+        "T1482",
+        "T1087"
+      ]
+    },
+    {
+      "id": "SDWIN-220708104300",
+      "techniques": [
+        "T1562"
+      ],
+      "fired": [
+        "T1036",
+        "T1059",
+        "T1204",
+        "T1202"
+      ]
+    },
+    {
+      "id": "SDWIN-220803205800",
+      "techniques": [
+        "T1562"
+      ],
+      "fired": [
+        "T1036",
+        "T1204",
+        "T1685",
+        "T1112"
+      ]
+    },
+    {
+      "id": "SDWIN-230720004300",
+      "techniques": [
+        "T1003"
+      ],
+      "fired": [
+        "T1036",
+        "T1059",
+        "T1140",
+        "T1202",
+        "T1571",
+        "T1204"
+      ]
+    }
+  ],
   "judge": {
     "bar": 0.8,
     "metric": "dataset detection recall",
-    "value": 0.5729,
+    "value": 0.5789,
     "pass": false
   }
 }

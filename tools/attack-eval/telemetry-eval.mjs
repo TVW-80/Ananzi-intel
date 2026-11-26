@@ -57,6 +57,7 @@ const SYSMON_CATS = {
 
 /** Map a raw telemetry event → { categories[], ...fields } or null to skip. */
 export function categorize(e) {
+  if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
   const ch = String(e.Channel || '');
   const id = Number(e.EventID);
   if (ch.includes('Sysmon')) {
@@ -104,7 +105,9 @@ export function loadDatasets(secDir) {
     let m; try { m = yaml.load(readFileSync(join(metaDir, f), 'utf8')); } catch { continue; }
     const platform = [].concat(m?.platform || []).map(String);
     if (!platform.some((p) => /windows/i.test(p))) continue;
-    const techs = [...new Set((m.attack_mappings || []).map((a) => parent(a.technique)).filter((t) => /^T\d{4}$/.test(t)))];
+    // Valid Enterprise technique ids only — T0000 is a placeholder some datasets
+    // carry; scoring against a non-existent technique would just be noise.
+    const techs = [...new Set((m.attack_mappings || []).map((a) => parent(a.technique)).filter((t) => /^T\d{4}$/.test(t) && t !== 'T0000'))];
     if (!techs.length) continue;
     // files[].link → local path under the repo
     const link = (m.files || []).map((x) => x.link).find((l) => /\/windows\/.*\/host\/.*\.zip$/.test(String(l)));
@@ -169,6 +172,7 @@ function main() {
   let detectedDatasets = 0, firedEvents = 0, correctFires = 0, totalEvents = 0;
   const techDetected = new Set(), techAll = new Set();
   const catHits = new Map(); // category → datasets where it produced a correct hit
+  const undetected = []; // the actionable gaps: captures we missed + what fired instead
 
   for (const ds of datasets) {
     const G = new Set(ds.techniques);
@@ -178,6 +182,7 @@ function main() {
     for (const [c, n] of s.catHits) catHits.set(c, (catHits.get(c) || 0) + n);
     const hit = [...G].some((t) => s.predicted.has(t));
     if (hit) { detectedDatasets += 1; for (const t of G) if (s.predicted.has(t)) techDetected.add(t); }
+    else undetected.push({ id: ds.id, techniques: [...G], fired: [...s.predicted].slice(0, 6) });
     process.stdout.write(`\r  scored ${detectedDatasets} detected / running…`);
   }
   process.stdout.write('\r');
@@ -195,6 +200,12 @@ function main() {
   console.log(`COMBINED F1 (recall×prec)  ${pct(f1).padStart(6)}`);
   console.log('\ntop sensors by correct hits:', [...catHits.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([c, n]) => `${c} ${n}`).join(' · '));
 
+  // Actionable gaps — not metric-chasing, the detection-engineering to-do list.
+  const missTechs = [...techAll].filter((t) => !techDetected.has(t)).sort();
+  console.log('\nDETECTION GAPS — undetected captures (labeled technique → what fired instead):');
+  for (const u of undetected.slice(0, 10)) console.log(`   ${u.id}  [${u.techniques.join(',')}]  fired: ${u.fired.join(',') || '(nothing)'}`);
+  console.log(`undetected techniques (${missTechs.length}): ${missTechs.join(', ') || '(none)'}`);
+
   const PASS = 0.8;
   console.log(`\nJUDGE: dataset detection recall ${pct(datasetRecall)} vs bar ${pct(PASS)} → ${datasetRecall >= PASS ? 'PASS' : 'BELOW BAR — reported honestly'}`);
 
@@ -207,6 +218,8 @@ function main() {
       techniqueBreadth: Number(breadth.toFixed(4)), techniquesDetected: techDetected.size, techniquesLabeled: techAll.size,
       alertPrecision: Number(alertPrecision.toFixed(4)), f1: Number(f1.toFixed(4)),
       detectedTechniques: [...techDetected].sort(),
+      undetectedTechniques: missTechs,
+      undetectedCaptures: undetected,
       judge: { bar: PASS, metric: 'dataset detection recall', value: Number(datasetRecall.toFixed(4)), pass: datasetRecall >= PASS },
     }, null, 2));
     console.log(`\nreport → ${out}`);

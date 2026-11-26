@@ -26,7 +26,7 @@ export const COVERAGE_SNAPSHOT = Object.freeze({
   scorecard: { f1: 0.275, alertPrecision: 0.323, recall: 0.239, breadthDetected: 85, breadthCovered: 122, bar: 0.8, events: 3263, rules: 1402 },
   // Higher-fidelity read: full multi-sensor Sigma corpus replayed over real
   // labeled Windows telemetry (OTRF Security-Datasets). See tools/attack-eval.
-  telemetry: { captureRecall: 0.573, detected: 55, captures: 96, techDetected: 20, techLabeled: 32, sensors: 6, rules: 2189 },
+  telemetry: { captureRecall: 0.579, detected: 55, captures: 95, techDetected: 20, techLabeled: 31, sensors: 6, rules: 2189 },
   drift: [
     { from: 'T1562', to: 'T1685', name: 'Disable or Modify Tools' },
     { from: 'T1574.002', to: 'T1574.001', name: 'DLL' },
