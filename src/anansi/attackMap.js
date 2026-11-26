@@ -30,6 +30,7 @@ import { COLORS, renderLegend } from './legend.js';
 import { createSitrep } from './sitrep.js';
 import { glyphBillboard } from './markerIcons.js';
 import { buildReplay } from '../data/replayModel.js';
+import { createCopilot, groundingContext } from './copilot.js';
 
 // Distinct glyph per category (monochrome symbols; coloured by the SVG badge).
 const GLYPH = Object.freeze({ source: '⌖', malware: '☣', phishing: '✉', leak: '↻', hijack: '⇄' });
@@ -238,11 +239,15 @@ function createHud({ onReplay = null } = {}) {
   brief.type = 'button';
   brief.title = 'Open the briefing: every alert in plain English and technical terms, a map legend and source status';
   brief.setAttribute('aria-expanded', 'false');
+  const askBtn = el('button', 'attack-map-brief-btn', 'ASK');
+  askBtn.type = 'button';
+  askBtn.title = 'Ask the grounded analyst copilot about the current picture (optional — needs a model key or a local Ollama)';
+  askBtn.setAttribute('aria-expanded', 'false');
   const fold = el('button', 'attack-map-fold', '–');
   fold.type = 'button';
   fold.title = 'Minimize';
   fold.setAttribute('aria-label', 'Minimize attack map panel');
-  head.append(el('span', 'attack-map-live', '● LIVE'), el('span', 'attack-map-title', 'F.A.N.G.S'), sitrepBtn, reconBtn, brief, fold);
+  head.append(el('span', 'attack-map-live', '● LIVE'), el('span', 'attack-map-title', 'F.A.N.G.S'), sitrepBtn, reconBtn, brief, askBtn, fold);
   head.title = 'Drag to move · double-click to re-dock';
   const counter = el('div', 'attack-map-counter', '—');
   const basis = el('div', 'attack-map-basis', 'waiting for DShield…');
@@ -303,6 +308,31 @@ function createHud({ onReplay = null } = {}) {
   for (const type of ['pointerdown', 'dblclick']) reconBtn.addEventListener(type, (e) => e.stopPropagation());
   reconBtn.addEventListener('click', (event) => { event.stopPropagation(); setRecon(reconPanel.hidden); });
   reconClose.addEventListener('click', () => setRecon(false));
+
+  // ASK — the grounded analyst copilot, in its own panel (fed the live snapshot).
+  const copilot = createCopilot(document, { getContext: () => groundingContext(last) });
+  const copilotPanel = el('aside', 'copilot-panel');
+  copilotPanel.hidden = true;
+  copilotPanel.setAttribute('role', 'dialog');
+  copilotPanel.setAttribute('aria-label', 'Analyst copilot');
+  const copilotHead = el('div', 'recon-panel-head');
+  const copilotClose = el('button', 'recon-panel-close', '×');
+  copilotClose.type = 'button';
+  copilotClose.setAttribute('aria-label', 'Close ASK');
+  copilotHead.append(el('span', null, 'ASK · analyst copilot'), copilotClose);
+  const copilotBody = el('div', 'recon-panel-body');
+  copilotBody.append(copilot.element);
+  copilotPanel.append(copilotHead, copilotBody);
+  document.body.append(copilotPanel);
+  const setAsk = (next) => {
+    copilotPanel.hidden = !next;
+    askBtn.setAttribute('aria-expanded', String(next));
+    askBtn.classList.toggle('active', next);
+    if (next) copilot.open();
+  };
+  for (const type of ['pointerdown', 'dblclick']) askBtn.addEventListener(type, (e) => e.stopPropagation());
+  askBtn.addEventListener('click', (event) => { event.stopPropagation(); setAsk(copilotPanel.hidden); });
+  copilotClose.addEventListener('click', () => setAsk(false));
 
   const panel = el('div', 'attack-map-brief');
   panel.hidden = true;
@@ -461,6 +491,7 @@ function createHud({ onReplay = null } = {}) {
       timer = rotateTimer = null;
       sitrep.dispose();
       reconPanel.remove();
+      copilotPanel.remove();
       hud.remove();
     },
     /** Open the one-pane rolling dashboard (attacks + AI-security + cyber news). */
