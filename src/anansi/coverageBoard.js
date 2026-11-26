@@ -24,11 +24,14 @@ export const COVERAGE_SNAPSHOT = Object.freeze({
     { id: 'detection', label: 'Sigma detection', techniques: 85, pct: 37.4, tactics: 13, color: '#3fa7ff', note: 'process_creation + PowerShell script-block, verified vs ground truth' },
   ],
   scorecard: { f1: 0.275, alertPrecision: 0.323, recall: 0.239, breadthDetected: 85, breadthCovered: 122, bar: 0.8, events: 3263, rules: 1402 },
+  // Higher-fidelity read: full multi-sensor Sigma corpus replayed over real
+  // labeled Windows telemetry (OTRF Security-Datasets). See tools/attack-eval.
+  telemetry: { captureRecall: 0.573, detected: 55, captures: 96, techDetected: 20, techLabeled: 32, sensors: 6, rules: 2189 },
   drift: [
     { from: 'T1562', to: 'T1685', name: 'Disable or Modify Tools' },
     { from: 'T1574.002', to: 'T1574.001', name: 'DLL' },
   ],
-  source: 'ATT&CK v20.1 · Atomic Red Team · SigmaHQ',
+  source: 'ATT&CK v20.1 · Atomic Red Team · SigmaHQ · OTRF Security-Datasets',
 });
 
 const pct1 = (x) => `${(100 * x).toFixed(1)}%`;
@@ -81,8 +84,13 @@ export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT
     el(doc, 'span', `atk-cov-badge ${pass ? 'ok' : 'below'}`, `F1 ${pct1(sc.f1)} / bar ${pct1(sc.bar)}`),
   );
   const detail = el(doc, 'div', 'atk-cov-score-detail',
-    `alert-P ${pct1(sc.alertPrecision)} · recall ${pct1(sc.recall)} · breadth ${sc.breadthDetected}/${sc.breadthCovered} techniques (${pct1(sc.breadthDetected / sc.breadthCovered)}) · ${sc.events.toLocaleString('en-US')} events / ${sc.rules.toLocaleString('en-US')} rules`);
+    `command corpus: alert-P ${pct1(sc.alertPrecision)} · recall ${pct1(sc.recall)} · breadth ${sc.breadthDetected}/${sc.breadthCovered} (${pct1(sc.breadthDetected / sc.breadthCovered)}) · ${sc.events.toLocaleString('en-US')} events / ${sc.rules.toLocaleString('en-US')} rules`);
   card.append(detail);
+  const tm = snapshot.telemetry;
+  if (tm) {
+    card.append(el(doc, 'div', 'atk-cov-score-detail',
+      `real telemetry: ${pct1(tm.captureRecall)} capture detection (${tm.detected}/${tm.captures}) · ${tm.techDetected}/${tm.techLabeled} techniques · ${tm.sensors} sensors · ${tm.rules.toLocaleString('en-US')} rules`));
+  }
   body.append(card);
 
   // ATT&CK drift — retired ids F.A.N.G.S still references, with replacements.

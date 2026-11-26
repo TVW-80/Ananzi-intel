@@ -1,0 +1,42 @@
+{
+  "generatedAt": "2026-11-26T06:26:35.681Z",
+  "datasets": 96,
+  "rules": 2189,
+  "logSources": 33,
+  "eventsScored": 462148,
+  "datasetDetectionRecall": 0.5729,
+  "detectedDatasets": 55,
+  "techniqueBreadth": 0.625,
+  "techniquesDetected": 20,
+  "techniquesLabeled": 32,
+  "alertPrecision": 0.238,
+  "f1": 0.3363,
+  "detectedTechniques": [
+    "T1003",
+    "T1021",
+    "T1037",
+    "T1047",
+    "T1053",
+    "T1055",
+    "T1059",
+    "T1069",
+    "T1087",
+    "T1112",
+    "T1197",
+    "T1218",
+    "T1220",
+    "T1505",
+    "T1518",
+    "T1543",
+    "T1546",
+    "T1547",
+    "T1548",
+    "T1574"
+  ],
+  "judge": {
+    "bar": 0.8,
+    "metric": "dataset detection recall",
+    "value": 0.5729,
+    "pass": false
+  }
+}

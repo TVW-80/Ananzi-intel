@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { matchSelection, evalCondition, ruleFires, ruleTechniques } from './sigma-engine.mjs';
 import { score } from './sigma-eval.mjs';
+import { categorize, scoreCapture } from './telemetry-eval.mjs';
 
 // ── Sigma engine (pure, dependency-free) ─────────────────────────────────────
 test('field modifiers: contains / endswith / startswith / re / |all', () => {
@@ -87,4 +88,41 @@ test('score computes alert-precision, recall, F1 and respects onlyCovered', () =
   assert.ok(Math.abs(full.f1 - 0.8) < 1e-9); // harmonic(1, 0.667)
   // per-technique breadth: both covered techniques detected at least once
   assert.equal([...covered.perTech.values()].every((v) => v.detected > 0), true);
+});
+
+// ── telemetry eval: event→sensor mapping + capture scoring ───────────────────
+test('categorize maps telemetry events to the right Sigma log sources', () => {
+  const sys = (id, extra = {}) => ({ Channel: 'Microsoft-Windows-Sysmon/Operational', EventID: id, ...extra });
+  assert.deepEqual(categorize(sys(1)).categories, ['process_creation']);
+  assert.deepEqual(categorize(sys(3)).categories, ['network_connection']);
+  assert.deepEqual(categorize(sys(13)).categories, ['registry_set', 'registry_event']);
+  assert.deepEqual(categorize(sys(7)).categories, ['image_load']);
+  assert.deepEqual(categorize({ Channel: 'Microsoft-Windows-PowerShell/Operational', EventID: 4104 }).categories, ['ps_script']);
+  assert.deepEqual(categorize({ Channel: 'Microsoft-Windows-PowerShell/Operational', EventID: 4103 }).categories, ['ps_module']);
+  // Security 4688 → process_creation with Sysmon field names
+  const sec = categorize({ Channel: 'Security', EventID: 4688, NewProcessName: 'C:\\x\\m.exe', ParentProcessName: 'C:\\x\\cmd.exe' });
+  assert.deepEqual(sec.categories, ['process_creation']);
+  assert.equal(sec.ev.Image, 'C:\\x\\m.exe');
+  assert.equal(categorize(sys(5)), null); // process-terminated → not scored
+  assert.equal(categorize({ Channel: 'Application', EventID: 1000 }), null);
+});
+
+test('scoreCapture gates rules by sensor and credits only the capture technique', () => {
+  const byCat = new Map([
+    ['process_creation', [{ detection: { s: { 'Image|endswith': '\\mimikatz.exe' }, condition: 's' }, techniques: ['T1003'] }]],
+    ['registry_set', [{ detection: { s: { 'TargetObject|contains': '\\CurrentVersion\\Run' }, condition: 's' }, techniques: ['T1547'] }]],
+  ]);
+  const sysmon = (id, fields) => ({ Channel: 'Microsoft-Windows-Sysmon/Operational', EventID: id, ...fields });
+  const events = [
+    sysmon(1, { Image: 'C:\\tmp\\mimikatz.exe', CommandLine: 'mimikatz.exe sekurlsa::logonpasswords' }), // → T1003 (in G)
+    sysmon(13, { TargetObject: 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\evil' }),        // → T1547 (not in G)
+    sysmon(1, { Image: 'C:\\Windows\\notepad.exe', CommandLine: 'notepad.exe' }),                         // benign → no rule
+  ];
+  const G = new Set(['T1003']); // the capture is labeled Credential Access
+  const r = scoreCapture(events, byCat, G);
+  assert.equal(r.totalEvents, 3);
+  assert.equal(r.firedEvents, 2);       // mimikatz + run-key both fired a rule
+  assert.equal(r.correctFires, 1);      // only the mimikatz event named the capture's technique
+  assert.ok(r.predicted.has('T1003') && r.predicted.has('T1547'));
+  assert.equal(r.catHits.get('process_creation'), 1); // the correct-technique hit came from process_creation
 });

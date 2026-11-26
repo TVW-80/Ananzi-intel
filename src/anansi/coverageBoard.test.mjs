@@ -39,6 +39,15 @@ test('detection scorecard is internally consistent and honestly reported', () =>
   assert.ok(Math.abs(f1 - sc.f1) < 0.01, 'F1 is the harmonic mean of P and R');
 });
 
+test('real-telemetry scorecard is internally consistent', () => {
+  const tm = S.telemetry;
+  assert.ok(tm.captureRecall >= 0 && tm.captureRecall <= 1);
+  assert.ok(tm.detected <= tm.captures, 'cannot detect more captures than exist');
+  assert.ok(tm.techDetected <= tm.techLabeled, 'cannot detect more techniques than labeled');
+  assert.ok(Math.abs(tm.captureRecall - tm.detected / tm.captures) < 0.005, 'recall == detected / captures');
+  assert.ok(tm.sensors >= 2, 'multi-sensor');
+});
+
 test('ATT&CK drift entries resolve a retired id to a live replacement', () => {
   assert.ok(S.drift.length >= 1);
   for (const d of S.drift) {

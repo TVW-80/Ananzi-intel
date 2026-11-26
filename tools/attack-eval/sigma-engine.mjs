@@ -49,7 +49,9 @@ function matchMap(map, event) {
   return Object.entries(map).every(([k, v]) => matchField(k, v, event));
 }
 
-const TEXT_FIELDS = ['CommandLine', 'Image', 'ParentImage', 'OriginalFileName', 'ScriptBlockText'];
+const TEXT_FIELDS = ['CommandLine', 'Image', 'ParentImage', 'OriginalFileName', 'ScriptBlockText',
+  'Payload', 'ContextInfo', 'Details', 'TargetObject', 'TargetFilename', 'ImageLoaded',
+  'DestinationHostname', 'QueryName', 'PipeName', 'Signature'];
 function matchKeyword(str, event) {
   const needle = lc(str);
   return TEXT_FIELDS.some((f) => lc(event[f]).includes(needle));

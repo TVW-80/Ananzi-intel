@@ -66,7 +66,29 @@ ATT&CK Enterprise universe: **227 techniques, 479 sub-techniques, 15 tactics.**
 | detector per-event **F1** | **27.5%** (alert-P 32.3% · R 23.9%) |
 | detection **breadth** | **85 / 122 = 69.7%** of rule-visible techniques caught ≥ once |
 
-### Judge: F1 ≥ 0.80 → **BELOW BAR, reported honestly**
+### Real-telemetry detection (multi-sensor) — `telemetry-eval.mjs`
+
+The command corpus is one sensor. This judge replays the **full multi-sensor
+Sigma corpus** (2,189 rules across 33 log sources: process_creation, registry,
+network, image_load, create_remote_thread, process_access, dns, pipe, ps_script,
+ps_module…) over **real labeled Windows telemetry** — 96 OTRF Security-Datasets
+(Mordor) captures, each Sysmon/PowerShell trace labeled with the ATT&CK technique
+it ran. This is how a detection team actually measures coverage.
+
+| Metric | Value |
+| --- | --- |
+| **dataset detection recall** | **57.3%** (55 / 96 captures detected) |
+| technique breadth | 62.5% (20 / 32 labeled techniques caught) |
+| alert precision (coarse) | 23.8% |
+| sensors contributing | process_creation · create_remote_thread · ps_module · registry · network · process_access |
+
+Moving from a single-sensor command corpus to multi-sensor real telemetry **more
+than doubled detection** (≈25% → 57.3%), and every sensor carries weight. Judge
+(detection recall ≥ 0.80): **BELOW BAR at 0.573, reported honestly** — the
+remaining gap is techniques with no rule in the captured sensor and Empire /
+classic-PowerShell (EventID 800) activity not yet mapped.
+
+### Command-corpus judge: F1 ≥ 0.80 → **BELOW BAR, reported honestly**
 
 The per-event attribution F1 is **0.275**, under the 0.80 target. That is a real,
 informative result, and the *why* is the finding a SOC lead cares about:
@@ -94,11 +116,13 @@ mkdir -p ~/attack-data && cd ~/attack-data
 git clone --depth 1 https://github.com/mitre/cti.git mitre-cti
 git clone --depth 1 https://github.com/redcanaryco/atomic-red-team.git
 git clone --depth 1 https://github.com/SigmaHQ/sigma.git
+git clone --depth 1 https://github.com/OTRF/Security-Datasets.git   # real telemetry (needs `unzip`)
 
 # 2. from the repo root (ATTACK_DATA defaults to /home/claude/attack-data)
 export ATTACK_DATA=~/attack-data
-node tools/attack-eval/sigma-eval.mjs --json tools/attack-eval/results-detection.json
-node tools/attack-eval/coverage.mjs  --json tools/attack-eval/results-coverage.json \
+node tools/attack-eval/sigma-eval.mjs      --json tools/attack-eval/results-detection.json
+node tools/attack-eval/telemetry-eval.mjs  --json tools/attack-eval/results-telemetry.json
+node tools/attack-eval/coverage.mjs        --json tools/attack-eval/results-coverage.json \
      --layer tools/attack-eval/fangs-attack-layer.json
 ```
 
