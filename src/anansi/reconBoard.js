@@ -35,7 +35,19 @@ function svg(doc, tag, attrs = {}) {
   return n;
 }
 
-export function createReconBoard(doc = document, { now = () => Date.now(), onReplay = null, standalone = false } = {}) {
+/** A compact, bounded incident for grounding the copilot / case export. */
+function compactIncident(inc) {
+  return {
+    title: inc.title,
+    confidence: inc.confidence,
+    killChainCoverage: inc.killChainCoverage,
+    techniques: (inc.techniques || []).slice(0, 8).map((t) => t.id),
+    sources: (inc.sources || []).length,
+    infrastructure: (inc.infrastructure || []).slice(0, 6).map((x) => (typeof x === 'string' ? x : x?.value || x?.ip || x?.id || '')).filter(Boolean),
+  };
+}
+
+export function createReconBoard(doc = document, { now = () => Date.now(), onReplay = null, standalone = false, onExplain = null } = {}) {
   const wrap = el(doc, 'section', standalone ? 'recon recon-standalone' : 'recon collapsed');
   wrap.setAttribute('aria-label', 'Event reconstruction');
   const head = el(doc, 'div', 'recon-head');
@@ -89,6 +101,7 @@ export function createReconBoard(doc = document, { now = () => Date.now(), onRep
 
   let allEvents = [];
   let span = { start: 0, end: 0 };
+  let lastIncidents = [];
 
   function killChainBar(inc) {
     const bar = el(doc, 'span', 'recon-kc');
@@ -134,6 +147,13 @@ export function createReconBoard(doc = document, { now = () => Date.now(), onRep
       setTimeout(() => { copy.textContent = 'copy case file'; }, 1800);
     });
     foot.append(copy);
+    if (onExplain) {
+      const explain = el(doc, 'button', 'recon-copy recon-explain', 'explain ▸');
+      explain.type = 'button';
+      explain.title = 'Ask the grounded copilot to explain this incident and what to do next';
+      explain.addEventListener('click', () => { try { onExplain(compactIncident(inc)); } catch { /* copilot not ready */ } });
+      foot.append(explain);
+    }
     card.append(foot);
     return card;
   }
@@ -193,6 +213,7 @@ export function createReconBoard(doc = document, { now = () => Date.now(), onRep
     asOf.textContent = live ? 'Live' : `as of ${axisLabel(playMs)}`;
     asOf.classList.toggle('rewound', !live);
     const incidents = correlateIncidents(events, { now: now() });
+    lastIncidents = incidents;
     // Drive the globe: replay country-level signal pulses as-of the playhead.
     try { onReplay?.({ live, playheadMs: playMs, events: allEvents }); } catch { /* map not ready */ }
     tally.textContent = incidents.length ? `${incidents.length} incident${incidents.length === 1 ? '' : 's'}` : '';
@@ -213,5 +234,5 @@ export function createReconBoard(doc = document, { now = () => Date.now(), onRep
     renderDerived();
   }
 
-  return { element: wrap, update };
+  return { element: wrap, update, getIncidents: () => lastIncidents.map(compactIncident) };
 }

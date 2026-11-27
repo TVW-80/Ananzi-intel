@@ -18,8 +18,9 @@ function el(doc, tag, cls, text) {
   return n;
 }
 
-/** Compact, bounded grounding context from the live attack snapshot + coverage. */
-export function groundingContext(attack) {
+/** Compact, bounded grounding context from the live attack snapshot, the
+ *  correlated RECON incidents, and the measured ATT&CK coverage + gaps. */
+export function groundingContext(attack, { incidents = [] } = {}) {
   const a = attack || {};
   const trim = (arr, n, f) => (Array.isArray(arr) ? arr.slice(0, n).map(f) : []);
   return {
@@ -30,12 +31,17 @@ export function groundingContext(attack) {
     ddosTargets: trim(a.ddos?.targets, 6, (t) => ({ country: t.name, pct: t.value })),
     alerts: trim(a.alerts, 12, (x) => ({ source: x.source, title: x.title, plain: x.plain || null, time: x.time || null })),
     exposure: trim(a.exposure, 5, (e) => ({ what: e.label, total: e.total })),
+    reconIncidents: trim(incidents, 8, (i) => i), // already compact (title, confidence, kill chain, techniques, infra)
     attackCoverage: {
       attack: COVERAGE_SNAPSHOT.attack,
       surfaces: COVERAGE_SNAPSHOT.surfaces.map((s) => ({ id: s.id, techniques: s.techniques, pct: s.pct })),
       detectionScorecard: COVERAGE_SNAPSHOT.scorecard,
       realTelemetry: COVERAGE_SNAPSHOT.telemetry,
       drift: COVERAGE_SNAPSHOT.drift,
+      detectionGaps: {
+        undetectedTechniques: COVERAGE_SNAPSHOT.telemetry?.undetected || [],
+        note: 'ATT&CK techniques F.A.N.G.S does not yet detect, from the real-telemetry eval — the detection to-do list.',
+      },
     },
     note: 'This is the only data to answer from. Correlation is a hypothesis; the timeline is as-reported.',
   };
@@ -80,15 +86,16 @@ export function createCopilot(doc = document, { getContext = () => ({}), fetchIm
     }
   }
 
-  async function submit(question) {
+  async function submit(question, focus) {
     if (busy || !question) return;
     busy = true; input.disabled = ask.disabled = true;
     bubble('user', question);
     const pending = bubble('bot', '…', 'pending');
     try {
+      const context = { ...getContext(), ...(focus ? { focus } : {}) };
       const res = await fetchImpl('/api/copilot', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, context: getContext() }),
+        body: JSON.stringify({ question, context }),
       });
       const body = await res.json();
       if (body.status === 'ok') { pending.textContent = body.answer; pending.classList.remove('pending'); }
@@ -111,5 +118,11 @@ export function createCopilot(doc = document, { getContext = () => ({}), fetchIm
     submit(q);
   });
 
-  return { element: wrap, open() { refreshEnabled(); } };
+  return {
+    element: wrap,
+    open() { refreshEnabled(); },
+    // Programmatic ask (e.g. the RECON card's "explain" button). focus is merged
+    // into the grounding context so the model homes in on that one incident.
+    ask(question, focus) { refreshEnabled(); submit(question, focus); },
+  };
 }

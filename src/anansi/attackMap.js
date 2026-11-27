@@ -275,7 +275,7 @@ function createHud({ onReplay = null } = {}) {
   track.append(lane);
   ticker.append(tag, track);
 
-  const sitrep = createSitrep(document, { onReplay });
+  const sitrep = createSitrep(document, { onReplay, onExplain: (inc) => explainIncident(inc) });
   document.body.append(sitrep.element);
   for (const type of ['pointerdown', 'dblclick']) sitrepBtn.addEventListener(type, (e) => e.stopPropagation());
   sitrepBtn.addEventListener('click', (event) => {
@@ -310,7 +310,7 @@ function createHud({ onReplay = null } = {}) {
   reconClose.addEventListener('click', () => setRecon(false));
 
   // ASK — the grounded analyst copilot, in its own panel (fed the live snapshot).
-  const copilot = createCopilot(document, { getContext: () => groundingContext(last) });
+  const copilot = createCopilot(document, { getContext: () => groundingContext(last, { incidents: sitrep.getReconIncidents?.() || [] }) });
   const copilotPanel = el('aside', 'copilot-panel');
   copilotPanel.hidden = true;
   copilotPanel.setAttribute('role', 'dialog');
@@ -333,6 +333,14 @@ function createHud({ onReplay = null } = {}) {
   for (const type of ['pointerdown', 'dblclick']) askBtn.addEventListener(type, (e) => e.stopPropagation());
   askBtn.addEventListener('click', (event) => { event.stopPropagation(); setAsk(copilotPanel.hidden); });
   copilotClose.addEventListener('click', () => setAsk(false));
+  // RECON card → "explain ▸": open ASK and ask the copilot about that incident.
+  function explainIncident(inc) {
+    setAsk(true);
+    copilot.ask(
+      `Explain this incident and what I should do next, using only what the data supports: "${inc?.title || 'this incident'}".`,
+      { incident: inc },
+    );
+  }
 
   const panel = el('div', 'attack-map-brief');
   panel.hidden = true;
