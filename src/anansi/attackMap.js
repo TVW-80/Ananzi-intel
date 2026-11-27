@@ -275,7 +275,7 @@ function createHud({ onReplay = null } = {}) {
   track.append(lane);
   ticker.append(tag, track);
 
-  const sitrep = createSitrep(document, { onReplay, onExplain: (inc) => explainIncident(inc) });
+  const sitrep = createSitrep(document, { onReplay, onExplain: (focus) => explainFocus(focus) });
   document.body.append(sitrep.element);
   for (const type of ['pointerdown', 'dblclick']) sitrepBtn.addEventListener(type, (e) => e.stopPropagation());
   sitrepBtn.addEventListener('click', (event) => {
@@ -333,13 +333,20 @@ function createHud({ onReplay = null } = {}) {
   for (const type of ['pointerdown', 'dblclick']) askBtn.addEventListener(type, (e) => e.stopPropagation());
   askBtn.addEventListener('click', (event) => { event.stopPropagation(); setAsk(copilotPanel.hidden); });
   copilotClose.addEventListener('click', () => setAsk(false));
-  // RECON card → "explain ▸": open ASK and ask the copilot about that incident.
-  function explainIncident(inc) {
+  // "explain ▸" anywhere → open ASK and ask the grounded copilot to break the
+  // selected thing down in plain English. One entry point, prompt varies by kind
+  // (RECON incident, ATT&CK coverage gaps, or a single alert); the focus is
+  // merged into the grounding context so the model homes in on it.
+  function explainFocus(focus) {
+    const f = focus || {};
     setAsk(true);
-    copilot.ask(
-      `Explain this incident and what I should do next, using only what the data supports: "${inc?.title || 'this incident'}".`,
-      { incident: inc },
-    );
+    if (f.kind === 'coverage') {
+      copilot.ask('In plain English, explain these ATT&CK detection gaps and tell me what to fix first — only what the eval data supports.', { coverage: f });
+    } else if (f.kind === 'alert') {
+      copilot.ask(`In plain English, explain this alert and what I should do about it, using only what the data supports: "${f.title || 'this alert'}".`, { alert: f });
+    } else {
+      copilot.ask(`Explain this incident and what I should do next, using only what the data supports: "${f.title || 'this incident'}".`, { incident: f });
+    }
   }
 
   const panel = el('div', 'attack-map-brief');
@@ -414,7 +421,7 @@ function createHud({ onReplay = null } = {}) {
       sec.append(el('h4', null, title), ...nodes);
       return sec;
     };
-    const explain = (heading, plain, technical, { color, link, source, details = [] } = {}) => {
+    const explain = (heading, plain, technical, { color, link, source, details = [], onExplain = null } = {}) => {
       const card = el('article', 'attack-map-brief-card');
       if (color) card.style.setProperty('--bar', color);
       const h = el('div', 'attack-map-brief-title');
@@ -443,11 +450,21 @@ function createHud({ onReplay = null } = {}) {
         if (d.technical) sub.append(el('p', 'attack-map-tech', d.technical));
         card.append(sub);
       }
+      if (onExplain) {
+        const btn = el('button', 'attack-map-explain', 'explain ▸');
+        btn.type = 'button';
+        btn.title = 'Ask the grounded copilot to explain this in plain English';
+        btn.addEventListener('click', () => { try { onExplain(); } catch { /* copilot not ready */ } });
+        card.append(btn);
+      }
       return card;
     };
     const typeCards = (b.attackTypes || []).map((t) => explain(`${t.label} — ${fmt(t.count)} attackers (48h)`, t.plain, t.technical, { color: t.color }));
     const legend = [renderLegend(document, { only: ['attack-map'] }), ...typeCards];
-    const alerts = (b.alerts || []).map((a) => explain(a.title, a.plain, a.technical, { link: a.link, source: a.source, details: a.details || [] }));
+    const alerts = (b.alerts || []).map((a) => explain(a.title, a.plain, a.technical, {
+      link: a.link, source: a.source, details: a.details || [],
+      onExplain: () => explainFocus({ kind: 'alert', title: a.title, source: a.source, plain: a.plain || null, technical: a.technical || null }),
+    }));
     const feeds = (b.feeds || []).map((f) => {
       const row = el('div', `attack-map-feed attack-map-feed-${f.status}`);
       const note = f.status === 'key-required'

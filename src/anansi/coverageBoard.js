@@ -48,8 +48,29 @@ function el(doc, tag, cls, text) {
   return n;
 }
 
+/** Compact, bounded coverage-gap payload for grounding the copilot's "explain". */
+export function coverageGap(snapshot = COVERAGE_SNAPSHOT) {
+  const sc = snapshot.scorecard;
+  const tm = snapshot.telemetry || {};
+  return {
+    kind: 'coverage',
+    title: 'ATT&CK detection coverage',
+    attack: snapshot.attack,
+    detectionF1: sc.f1,
+    bar: sc.bar,
+    alertPrecision: sc.alertPrecision,
+    recall: sc.recall,
+    breadth: `${sc.breadthDetected}/${sc.breadthCovered}`,
+    realTelemetryRecall: tm.captureRecall ?? null,
+    techniquesDetected: tm.techDetected ?? null,
+    techniquesLabeled: tm.techLabeled ?? null,
+    undetectedTechniques: tm.undetected || [],
+    drift: (snapshot.drift || []).map((d) => `${d.from}→${d.to}`),
+  };
+}
+
 /** The ATT&CK coverage board: { element, update() }. update is a no-op (static snapshot). */
-export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT) {
+export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT, { onExplain = null } = {}) {
   const wrap = el(doc, 'section', 'atk-cov collapsed');
   wrap.setAttribute('aria-label', 'ATT&CK detection coverage');
   const head = el(doc, 'div', 'atk-cov-head');
@@ -95,6 +116,14 @@ export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT
   if (tm) {
     card.append(el(doc, 'div', 'atk-cov-score-detail',
       `real telemetry: ${pct1(tm.captureRecall)} capture detection (${tm.detected}/${tm.captures}) · ${tm.techDetected}/${tm.techLabeled} techniques · ${tm.sensors} sensors · ${tm.rules.toLocaleString('en-US')} rules`));
+  }
+  // "explain ▸" — ask the grounded copilot to read these gaps in plain English.
+  if (onExplain) {
+    const btn = el(doc, 'button', 'atk-cov-explain', 'explain gaps ▸');
+    btn.type = 'button';
+    btn.title = 'Ask the grounded copilot to explain these detection gaps and what to fix first';
+    btn.addEventListener('click', () => { try { onExplain(coverageGap(snapshot)); } catch { /* copilot not ready */ } });
+    card.append(btn);
   }
   body.append(card);
 

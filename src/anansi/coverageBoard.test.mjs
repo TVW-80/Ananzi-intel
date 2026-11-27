@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { COVERAGE_SNAPSHOT } from './coverageBoard.js';
+import { COVERAGE_SNAPSHOT, coverageGap } from './coverageBoard.js';
 
 const S = COVERAGE_SNAPSHOT;
 const round1 = (x) => Number(x.toFixed(1));
@@ -46,6 +46,19 @@ test('real-telemetry scorecard is internally consistent', () => {
   assert.ok(tm.techDetected <= tm.techLabeled, 'cannot detect more techniques than labeled');
   assert.ok(Math.abs(tm.captureRecall - tm.detected / tm.captures) < 0.005, 'recall == detected / captures');
   assert.ok(tm.sensors >= 2, 'multi-sensor');
+});
+
+test('coverageGap is a bounded, faithful copilot focus drawn from the snapshot', () => {
+  const g = coverageGap();
+  assert.equal(g.kind, 'coverage'); // routes the copilot to the gaps prompt
+  assert.equal(g.detectionF1, S.scorecard.f1);
+  assert.equal(g.bar, S.scorecard.bar);
+  assert.deepEqual(g.undetectedTechniques, S.telemetry.undetected);
+  assert.equal(g.realTelemetryRecall, S.telemetry.captureRecall);
+  // every undetected id is a real ATT&CK technique id (the detection to-do list)
+  for (const id of g.undetectedTechniques) assert.match(id, /^T\d{4}(\.\d{3})?$/);
+  // drift is flattened to from→to strings, one per snapshot drift entry
+  assert.equal(g.drift.length, S.drift.length);
 });
 
 test('ATT&CK drift entries resolve a retired id to a live replacement', () => {

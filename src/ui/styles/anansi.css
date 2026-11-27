@@ -1785,6 +1785,16 @@ body:not(.ananzi-menu-open) #locale-picker { display: none !important; }
 .recon-copy:hover { background: rgba(212, 175, 55, 0.15); }
 .recon-empty { font-size: 10px; color: var(--text-secondary); }
 
+/* "explain ▸" buttons — grounded-copilot handoff on the BRIEF alert cards and
+   the ATT&CK coverage scorecard (mirrors .recon-explain's gold handoff look). */
+.attack-map-explain, .atk-cov-explain {
+  align-self: flex-start; margin-top: 6px;
+  background: none; border: 1px solid rgba(63, 167, 255, 0.5); color: #8fd0ff;
+  font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.04em;
+  padding: 2px 7px; border-radius: 2px; cursor: pointer; white-space: nowrap;
+}
+.attack-map-explain:hover, .atk-cov-explain:hover { background: rgba(63, 167, 255, 0.15); }
+
 /* RECON standalone panel (its own menu, left of the SITREP pane). */
 .recon-panel {
   position: fixed; z-index: 330; top: 82px; left: 16px;

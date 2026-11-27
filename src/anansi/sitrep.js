@@ -185,7 +185,7 @@ export function createSitrep(doc = document, { fetchImpl = (...a) => globalThis.
   close.setAttribute('aria-label', 'Close SITREP');
   head.append(title, close);
   const heat = createAttackHeatmap(doc); // live ATT&CK heat map at the top
-  const coverage = createCoverageBoard(doc); // measured ATT&CK coverage + detection scorecard
+  const coverage = createCoverageBoard(doc, undefined, { onExplain }); // measured ATT&CK coverage + detection scorecard
   const vulnScore = createVulnScorecard(doc); // CySA+ patch-priority queue
   const serviceBoard = createServiceBoard(doc); // "is it down right now" board
   const pwnedCheck = createPwnedCheck(doc); // keyless k-anonymity password check
