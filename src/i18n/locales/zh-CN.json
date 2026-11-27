@@ -416,7 +416,6 @@
   "Removed from {store}. Restarting — this page reloads itself.": "已从 {store} 中移除。正在重启——本页面将自动重新加载。",
   "The photorealistic 3D planet, place search + Street View": "照片级逼真 3D 地球、地点搜索 + 街景",
   "Places context + Street View fallback; optional separate key": "地点信息 + 街景备用；可选的独立密钥",
-  "Voice control — API key or ChatGPT OAuth": "语音控制——API 密钥或 ChatGPT OAuth",
   "Live ships, worldwide": "全球实时船舶",
   "Live active-fire detections": "实时活跃火点探测",
   "Real live traffic (keyless runs a simulation)": "真实实时路况（无密钥时为模拟）",
@@ -2892,5 +2891,8 @@
   "News Events": "新闻事件",
   "Incidents": "突发事件",
   "F.A.N.G.S": "F.A.N.G.S",
-  "Attack Map “is this real?” tags: tells mass internet scanners apart from attackers that may be picking targets. Works without a key; a key (work-email accounts only) raises the daily limit.": "攻击地图的“是否真实？”标签：区分大规模互联网扫描器与可能有目标的攻击者。无需密钥即可使用；密钥（仅限工作邮箱账户）可提高每日限额。"
+  "Attack Map “is this real?” tags: tells mass internet scanners apart from attackers that may be picking targets. Works without a key; a key (work-email accounts only) raises the daily limit.": "攻击地图的“是否真实？”标签：区分大规模互联网扫描器与可能有目标的攻击者。无需密钥即可使用；密钥（仅限工作邮箱账户）可提高每日限额。",
+  "Voice control, and the F.A.N.G.S ASK copilot — API key or ChatGPT OAuth": "语音控制，以及 F.A.N.G.S 的 ASK 副驾 —— API 密钥或 ChatGPT OAuth",
+  "The F.A.N.G.S ASK copilot and every “explain ▸” button: plain-English answers grounded in the live attack + coverage data. Optional; billing-enabled API key.": "F.A.N.G.S 的 ASK 副驾和每个“explain ▸”按钮：基于实时攻击与覆盖数据给出通俗易懂的解答。可选；需启用计费的 API 密钥。",
+  "Run the ASK copilot on a local model instead — no key, nothing leaves your machine. Paste your Ollama server URL (e.g. http://localhost:11434).": "改用本地模型运行 ASK 副驾——无需密钥，数据不离开你的设备。粘贴你的 Ollama 服务器地址（例如 http://localhost:11434）。"
 }

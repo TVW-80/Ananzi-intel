@@ -77,7 +77,6 @@
   "Public space-missions access needs no key. Leave blank for standard use; paid tokens only raise request limits.": "Общедоступные данные космических миссий не требуют ключа. Для обычного использования оставьте поле пустым; платные токены только повышают лимиты запросов.",
   "Optional paid token — public access works without one": "Необязательный платный токен — публичный доступ работает без него",
   "Places context + Street View fallback; optional separate key": "Контекст Places + резерв: Просмотр улиц; отдельный ключ — по желанию",
-  "Voice control — API key or ChatGPT OAuth": "Голосовое управление — ключ API или ChatGPT OAuth",
   "Live ships, worldwide": "Суда в реальном времени по всему миру",
   "Live active-fire detections": "Обнаружение активных пожаров в реальном времени",
   "Real live traffic (keyless runs a simulation)": "Настоящие пробки в реальном времени (без ключа — симуляция)",
@@ -3099,5 +3098,8 @@
   "News Events": "События в новостях",
   "Incidents": "Происшествия",
   "F.A.N.G.S": "F.A.N.G.S",
-  "Attack Map “is this real?” tags: tells mass internet scanners apart from attackers that may be picking targets. Works without a key; a key (work-email accounts only) raises the daily limit.": "Метки «это реально?» на Карте атак: отличают массовые сканеры интернета от атакующих, которые могут выбирать цели. Работает без ключа; ключ (только для рабочих e-mail) повышает дневной лимит."
+  "Attack Map “is this real?” tags: tells mass internet scanners apart from attackers that may be picking targets. Works without a key; a key (work-email accounts only) raises the daily limit.": "Метки «это реально?» на Карте атак: отличают массовые сканеры интернета от атакующих, которые могут выбирать цели. Работает без ключа; ключ (только для рабочих e-mail) повышает дневной лимит.",
+  "Voice control, and the F.A.N.G.S ASK copilot — API key or ChatGPT OAuth": "Голосовое управление и ASK-копилот F.A.N.G.S — ключ API или OAuth ChatGPT",
+  "The F.A.N.G.S ASK copilot and every “explain ▸” button: plain-English answers grounded in the live attack + coverage data. Optional; billing-enabled API key.": "ASK-копилот F.A.N.G.S и каждая кнопка «explain ▸»: ответы простым языком на основе актуальных данных об атаках и покрытии. По желанию; ключ API с включённой оплатой.",
+  "Run the ASK copilot on a local model instead — no key, nothing leaves your machine. Paste your Ollama server URL (e.g. http://localhost:11434).": "Запустите ASK-копилот на локальной модели — без ключа, ничего не покидает ваш компьютер. Вставьте URL вашего сервера Ollama (например, http://localhost:11434)."
 }

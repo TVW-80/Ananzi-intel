@@ -61,7 +61,7 @@ export const KEY_SETUP_KEYS = Object.freeze([
   Object.freeze({
     id: 'openai',
     title: 'OPENAI', // i18n-ignore: provider product name
-    unlocks: msg('Voice control — API key or ChatGPT OAuth'),
+    unlocks: msg('Voice control, and the F.A.N.G.S ASK copilot — API key or ChatGPT OAuth'),
     getUrl: 'https://platform.openai.com/api-keys',
     envVars: Object.freeze(['OPENAI_API_KEY']),
     tier: 'metered',
@@ -205,6 +205,29 @@ export const KEY_SETUP_KEYS = Object.freeze([
     ),
     getUrl: 'https://github.com/settings/tokens',
     envVars: Object.freeze(['GITHUB_TOKEN']),
+    tier: 'optional',
+  }),
+  // ── Ananzi: the F.A.N.G.S ASK copilot (grounded analyst + “explain ▸” buttons) ──
+  // Any ONE of these turns the copilot on; the server picks Anthropic, then
+  // OpenAI (row above), then Ollama. Keys stay server-side (never clientExposed).
+  Object.freeze({
+    id: 'anthropic',
+    title: 'ANTHROPIC', // i18n-ignore: provider product name
+    unlocks: msg(
+      'The F.A.N.G.S ASK copilot and every “explain ▸” button: plain-English answers grounded in the live attack + coverage data. Optional; billing-enabled API key.',
+    ),
+    getUrl: 'https://console.anthropic.com/settings/keys',
+    envVars: Object.freeze(['ANTHROPIC_API_KEY']),
+    tier: 'metered',
+  }),
+  Object.freeze({
+    id: 'ollama',
+    title: 'OLLAMA', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Run the ASK copilot on a local model instead — no key, nothing leaves your machine. Paste your Ollama server URL (e.g. http://localhost:11434).',
+    ),
+    getUrl: 'https://ollama.com/download',
+    envVars: Object.freeze(['OLLAMA_URL']),
     tier: 'optional',
   }),
   // ── Ananzi: US state 511 traffic cameras (TravelIQ platform, BYOK) ──
