@@ -756,7 +756,11 @@ export function createAttackMapLayer({ overlayHost, fetchImpl = (...a) => global
   function addHijack(h, index) {
     const color = Cesium.Color.fromCssColorString(COLORS.hijack);
     const id = `${ID_PREFIX}bgp:${h.id}`;
-    const point = { title: h.title, place: `${h.from.name} → ${h.to.name}`, count: 0, time: h.time, approximate: true, items: [{ text: `${h.ongoing ? 'Ongoing' : 'Ended'} · confidence ${h.confidence}/10`, plain: h.plain, tech: h.technical }] };
+    const items = [{ text: `${h.ongoing ? 'Ongoing' : 'Ended'} · confidence ${h.confidence}/10`, plain: h.plain, tech: h.technical }];
+    // RIPEstat RPKI second opinion (keyless): the authoritative check on whether
+    // the hijacker's AS is even allowed to announce the prefix.
+    if (h.rpki) items.push({ text: `◆ ${h.rpki.label}`, plain: h.rpki.plain, tech: h.rpki.technical });
+    const point = { title: h.title, place: `${h.from.name} → ${h.to.name}`, count: 0, time: h.time, approximate: true, items };
     if (h.domestic) {
       _ds.entities.add({ id, position: Cesium.Cartesian3.fromDegrees(h.from.lon + 1.6, h.from.lat, POINT_LIFT_M.world), point: { pixelSize: 12, color: color.withAlpha(0.05), outlineColor: color, outlineWidth: 2 } });
       clickable(id, point);

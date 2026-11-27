@@ -56,6 +56,7 @@ import {
   buildAttackerIps,
   normalizeVirusTotalIp,
 } from './attack-sources.js';
+import { enrichHijacksWithRipe } from './ripestat.js';
 import { createIpGeo } from './ip-geo.js';
 import { resolve4 as dnsResolve4 } from 'node:dns/promises';
 import {
@@ -498,7 +499,9 @@ export function buildHijacks(events) {
         ongoing: e.ongoing,
         title: `${who} claimed ${victim}’s addresses`,
         plain: BGP.hijack.plain,
-        technical: `${BGP.hijack.technical} Hijacker ${who} (${e.hijackerCountry}) → victim ${victim} (${e.victimCountries.join(', ')}); prefixes ${e.prefixes.join(', ') || 'n/a'}; confidence ${e.confidence}/10; ${e.ongoing ? 'ongoing' : `ended ${e.end || '?'}`}.`,
+        technical: `${BGP.hijack.technical} Hijacker ${who} (${e.hijackerCountry}) → victim ${victim} (${e.victimCountries.join(', ')}); prefixes ${e.prefixes.join(', ') || 'n/a'}; confidence ${e.confidence}/10; ${e.ongoing ? 'ongoing' : `ended ${e.end || '?'}`}.${e.rpki ? ` ${e.rpki.technical}` : ''}`,
+        // RIPEstat RPKI corroboration (keyless), null when unavailable.
+        rpki: e.rpki ? { status: e.rpki.status, label: e.rpki.label, hijackEvidence: e.rpki.hijackEvidence, plain: e.rpki.plain, technical: e.rpki.technical } : null,
         time: e.start || null,
       };
     })
@@ -549,6 +552,7 @@ export function createAttackMapService({
   const gnBudget = { day: '', used: 0 };
   const idbCache = new Map(); // ip -> { at, info } (Shodan InternetDB)
   const vtCache = new Map(); // ip -> { at, info } (VirusTotal reputation)
+  const ripeCache = new Map(); // "rpki:asn:prefix" | "holder:asn" -> { at, value } (RIPEstat)
   const sources = new Map(); // id -> { at, ok, status, value, error }
   let snapshot = null; // { at, body }
   let inflight = null;
@@ -873,8 +877,12 @@ export function createAttackMapService({
       const headers = { Authorization: `Bearer ${token}`, Accept: 'application/json' };
       const [h, l] = await Promise.allSettled([getJson(URLS.bgpHijacks, { headers }), getJson(URLS.bgpLeaks, { headers })]);
       if (h.status === 'rejected' && l.status === 'rejected') throw h.reason;
+      const hijacks = h.status === 'fulfilled' ? normalizeBgpHijacks(h.value) : [];
+      // Keyless second opinion: corroborate each hijack with RIPEstat RPKI
+      // validation. Best-effort — a RIPEstat hiccup never fails the BGP source.
+      await enrichHijacksWithRipe(hijacks, { fetchImpl, cache: ripeCache, now: clock });
       return {
-        hijacks: h.status === 'fulfilled' ? normalizeBgpHijacks(h.value) : [],
+        hijacks,
         leaks: l.status === 'fulfilled' ? normalizeBgpLeaks(l.value) : [],
       };
     },
@@ -1136,7 +1144,7 @@ const FEED_LABELS = Object.freeze({
   tor: 'Tor exit list',
   kev: 'CISA KEV',
   fortiguard: 'FortiGuard',
-  bgp: 'Cloudflare Radar BGP (route hijacks & leaks)',
+  bgp: 'Cloudflare Radar BGP (route hijacks & leaks) · RIPEstat RPKI validation',
   malwarebazaar: 'abuse.ch MalwareBazaar',
   sslbl: 'abuse.ch SSLBL',
   hibp: 'Have I Been Pwned (breaches)',
