@@ -694,8 +694,9 @@ export function createAttackMapLayer({ overlayHost, fetchImpl = (...a) => global
     const w = source.weight || 0;
     const srcPos = Cesium.Cartesian3.fromDegrees(source.lon, source.lat, POINT_LIFT_M.world);
     // Soft glow halo behind the icon so the origin reads as "live" without an arc.
+    const glowId = `${ID_PREFIX}src:glow:${key}`;
     _ds.entities.add({
-      id: `${ID_PREFIX}src:glow:${key}`,
+      id: glowId,
       position: srcPos,
       point: {
         pixelSize: 12 + w * 20,
@@ -711,7 +712,11 @@ export function createAttackMapLayer({ overlayHost, fetchImpl = (...a) => global
       position: srcPos,
       billboard: glyphBillboard(Cesium, GLYPH.source, css, { scale: 0.9 + w * 0.8 }),
     });
-    clickable(markerId, sourcePopup(source, attackTypes));
+    // The halo is wider than the glyph, so a click on the ring picks the glow,
+    // not the icon — register both ids to the same popup so either opens it.
+    const point = sourcePopup(source, attackTypes);
+    clickable(markerId, point);
+    clickable(glowId, point);
     return { id: key, position: srcPos, title: `${def.icon} ${source.name}`, accent: css, priority: Math.round(w * 1000) };
   }
 
