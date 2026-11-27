@@ -34,7 +34,7 @@ import { createCopilot, groundingContext } from './copilot.js';
 import { createCoverageLab } from './coverageLab.js';
 
 // Distinct glyph per category (monochrome symbols; coloured by the SVG badge).
-const GLYPH = Object.freeze({ source: '⌖', malware: '☣', phishing: '✉', leak: '↻', hijack: '⇄' });
+const GLYPH = Object.freeze({ source: '⌖', malware: '☣', phishing: '✉', leak: '↻', hijack: '⇄', certwatch: '≈' });
 
 export const ATTACK_MAP_LAYER = Object.freeze({
   id: 'cyber-attack-map',
@@ -805,6 +805,28 @@ export function createAttackMapLayer({ overlayHost, fetchImpl = (...a) => global
     });
   }
 
+  /** CT lookalike sites hosted in a country: amber “≈” glyph, suspected impersonation. */
+  function addCertWatch(p) {
+    const id = `${ID_PREFIX}certwatch:${p.country}`;
+    _ds.entities.add({
+      id,
+      position: Cesium.Cartesian3.fromDegrees(p.lon + 1.6, Math.max(-85, p.lat - 1.2), POINT_LIFT_M.world),
+      billboard: glyphBillboard(Cesium, GLYPH.certwatch, COLORS.certwatch, { scale: 1 + Math.min(0.8, p.count * 0.15) }),
+    });
+    clickable(id, {
+      title: `${p.count} suspected impersonation site${p.count === 1 ? '' : 's'}`,
+      place: p.name,
+      count: 0,
+      time: null,
+      approximate: true,
+      items: [
+        { text: 'What this is', plain: p.plain, tech: p.technical },
+        ...p.brands.map((b) => ({ text: `Impersonates ${b.name} × ${b.count}` })),
+        ...p.hosts.map((h) => ({ text: h })),
+      ],
+    });
+  }
+
   /** Cloudflare DDoS pair: dashed pink arc country → country. */
   function addPair(pair, index, maxValue) {
     if (pair.domestic) return;
@@ -924,6 +946,7 @@ export function createAttackMapLayer({ overlayHost, fetchImpl = (...a) => global
         const leaks = body.leaks || [];
         const malware = body.malware || [];
         const phishing = body.phishing || [];
+        const certWatch = body.certWatch || [];
         const labels = sources.map((src) => addSourceMarker(src, attackTypes));
         const maxPair = Math.max(0, ...pairs.filter((p) => !p.domestic).map((p) => p.value));
         pairs.forEach((p, i) => addPair(p, i, maxPair));
@@ -931,6 +954,7 @@ export function createAttackMapLayer({ overlayHost, fetchImpl = (...a) => global
         leaks.forEach(addLeak);
         malware.forEach(addMalware);
         phishing.forEach(addPhish);
+        certWatch.forEach(addCertWatch);
         overlayHost?.setEntries(
           overlayId,
           labels
@@ -954,7 +978,7 @@ export function createAttackMapLayer({ overlayHost, fetchImpl = (...a) => global
         _hud?.update(body);
         // A redraw wiped the entities; if a replay is rewound, re-apply it.
         if (_replay && !_replay.live) applyReplay(_replay);
-        _count = sources.length + pairs.filter((p) => !p.domestic).length + malware.length + phishing.length + hijacks.length;
+        _count = sources.length + pairs.filter((p) => !p.domestic).length + malware.length + phishing.length + certWatch.length + hijacks.length;
         _lastUpdate = Date.now();
         _lastError = body.status === 'ok' ? null : body.errors?.[0] || null;
         governorRequestRender(`anansi:${def.id}`);

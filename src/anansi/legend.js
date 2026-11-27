@@ -47,6 +47,7 @@ export const COLORS = Object.freeze({
   ddos: '#e0457b',
   malware: '#c04dd8',
   phishing: '#8fd46b',
+  certwatch: '#f2c14e',
   hijack: '#ffb000',
   target: '#ff2b2b',
 });
@@ -88,6 +89,7 @@ export function legendGroups() {
         { shape: 'ring', color: COLORS.hijack, label: 'Amber ring', plain: 'Internet route leak: a network passed on directions it shouldn’t have, detouring traffic.', technical: 'BGP route leak events (Cloudflare Radar).' },
         { shape: 'glyph', color: COLORS.malware, glyph: '☣', label: 'Biohazard (malware servers)', plain: 'Malware control servers and hacking-toolkit servers in that country. Click for the malware names.', technical: 'ThreatFox botnet_cc IOCs + C2IntelFeeds (Cobalt Strike, Sliver…) + SSLBL, AS country.' },
         { shape: 'glyph', color: COLORS.phishing, glyph: '✉', label: 'Envelope (phishing)', plain: 'Fake login pages (phishing) hosted in that country, and which brand they impersonate.', technical: 'OpenPhish community feed, host resolved and geolocated.' },
+        { shape: 'glyph', color: COLORS.certwatch, glyph: '≈', label: 'Lookalike certificate (impersonation)', plain: 'Domains that just took out an HTTPS certificate while copying a brand’s name — a likely phishing setup, shown where the domain is hosted now. A lead to investigate, not a confirmed attack.', technical: 'crt.sh Certificate Transparency lookalike watch (Public Suffix List–classified), host resolved and geolocated.' },
         { shape: 'pulse', color: COLORS.target, label: 'Pulsing red target', plain: 'Hampton Roads — your home vantage point. Attacks are shown where they actually come from, so arcs no longer funnel here.', technical: 'Fixed home marker 36.85, -76.29.' },
       ],
     },

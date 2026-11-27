@@ -375,6 +375,11 @@ export const PHISHING = Object.freeze({
   technical: 'OpenPhish community feed (URLs), hosting IP geolocated to AS country.',
 });
 
+export const CERT_WATCH = Object.freeze({
+  plain: 'Suspected impersonation sites — domains that just got an HTTPS certificate while copying a real brand’s name. Shown where the domain is hosted now (which may be a shared CDN, not the attacker). A lead to investigate, not a confirmed attack.',
+  technical: 'crt.sh Certificate Transparency lookalike watch (PSL-classified squat/deception), host resolved and geolocated to AS country.',
+});
+
 export const C2_TOOLS = Object.freeze({
   plain: 'Servers running professional hacking toolkits (Cobalt Strike, Sliver, Metasploit…) used to control machines after a break-in.',
   technical: 'C2IntelFeeds (community scanning for C2 framework fingerprints), last 30 days.',

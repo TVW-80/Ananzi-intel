@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildSources,
+  buildCertPoints,
   createAttackMapService,
   normalizeIp,
   normalizeIpInfo,
@@ -9,6 +10,23 @@ import {
   normalizeTopPorts,
   parseRssItems,
 } from './attack-map.js';
+
+test('buildCertPoints groups resolved lookalikes by country, carries brands, drops the unlocated', () => {
+  const pts = buildCertPoints([
+    { host: 'paypal-login.com', brand: 'PayPal', country: 'ru' },
+    { host: 'paypa1-verify.com', brand: 'PayPal', country: 'ru' },
+    { host: 'ms-login.net', brand: 'Microsoft', country: 'us' },
+    { host: 'unresolved.example', brand: 'Apple' }, // no country → excluded
+  ]);
+  assert.equal(pts.length, 2); // ru + us; the unlocated one is dropped
+  const ru = pts.find((p) => p.country === 'ru');
+  assert.equal(ru.count, 2);
+  assert.deepEqual(ru.brands, [{ name: 'PayPal', count: 2 }]);
+  assert.ok(ru.hosts.some((h) => h.includes('impersonates PayPal')));
+  assert.ok(ru.hosts.every((h) => h.includes('[.]'))); // defanged
+  assert.ok(ru.plain && ru.technical); // CERT_WATCH styling merged in
+  assert.equal(pts[0].count >= pts[1].count, true); // sorted by count
+});
 
 // Synthetic fixtures shaped like the public APIs — documentation-range IPs only.
 const TOP_IPS = [

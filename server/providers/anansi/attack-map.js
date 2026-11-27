@@ -75,6 +75,7 @@ import {
   epssExplained,
   BGP,
   PHISHING,
+  CERT_WATCH,
   C2_TOOLS,
   SSLBL,
   breachExplained,
@@ -480,6 +481,23 @@ export function buildPhishPoints(hosts) {
   }
   return [...byCountry.values()]
     .map((r) => ({ ...r, brands: [...r.brands.entries()].sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count })), ...PHISHING }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/** CT lookalike hosts geolocated to the country they resolve to (suspected impersonation). */
+export function buildCertPoints(hosts) {
+  const byCountry = new Map();
+  for (const h of hosts) {
+    const c = h.country && countryCentroid(h.country);
+    if (!c) continue;
+    const r = byCountry.get(h.country) || { country: h.country, name: c.name, lat: c.lat, lon: c.lon, count: 0, brands: new Map(), hosts: [] };
+    r.count += 1;
+    if (h.brand) r.brands.set(h.brand, (r.brands.get(h.brand) || 0) + 1);
+    if (r.hosts.length < 5) r.hosts.push(`${defang(h.host)}${h.brand ? ` — impersonates ${h.brand}` : ''}`);
+    byCountry.set(h.country, r);
+  }
+  return [...byCountry.values()]
+    .map((r) => ({ ...r, brands: [...r.brands.entries()].sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count })), ...CERT_WATCH }))
     .sort((a, b) => b.count - a.count);
 }
 
@@ -1031,6 +1049,13 @@ export function createAttackMapService({
     const phishHosts = await resolveHosts(spacedSample(phish.hosts, PHISH_SAMPLE).map((h) => ({ ...h })), errors);
     await lookupCountries(phishHosts, budget, errors);
 
+    // CT lookalikes → pin where they are hosted now. Own small budget so a few
+    // always resolve even when the main geo budget is spent; degrades to none.
+    const certFindings = val('certs') || [];
+    const certBudget = { left: 8, failed: false };
+    const certHosts = await resolveHosts(certFindings.slice(0, 10).map((f) => ({ host: f.domain, brand: f.brand })), errors);
+    await lookupCountries(certHosts, certBudget, errors);
+
     dsh.ips.forEach(tag);
     blocklistIps.forEach((ip) => {
       const own = ip.services;
@@ -1065,6 +1090,7 @@ export function createAttackMapService({
     const pairs = buildPairs(radar.pairs);
     const malware = buildMalwarePoints(c2, malpedia);
     const phishing = buildPhishPoints(phishHosts);
+    const certPoints = buildCertPoints(certHosts);
     const bgp = val('bgp') || { hijacks: [], leaks: [] };
     const hijacks = buildHijacks(bgp.hijacks);
     const leaks = buildLeaks(bgp.leaks);
@@ -1086,6 +1112,7 @@ export function createAttackMapService({
       pairs,
       malware,
       phishing,
+      certWatch: certPoints,
       hijacks,
       leaks,
       attackTypes,
