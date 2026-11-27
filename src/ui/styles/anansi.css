@@ -1859,3 +1859,161 @@ body:not(.ananzi-menu-open) #locale-picker { display: none !important; }
 .copilot-log::-webkit-scrollbar { width: 8px; }
 .copilot-log::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.45); border-radius: 4px; }
 .recon-standalone { border-bottom: none; }
+
+/* ── ATT&CK COVERAGE LAB + coverage-card visuals ─────────────────────────────
+   Evidence encoding validated with the dataviz validator on the #0a0908 panel:
+   one-hue blue ordinal ramp (explained → lab-verified → detected on real traces,
+   --ordinal PASS) + reserved critical red for a measured miss (CVD ΔE ≥ 24 vs
+   every blue step). In-cell labels use dark ink (≥ 4.5:1 on every fill). Colour
+   never carries meaning alone: ✓/✕ glyphs, legend, tooltips and a table view. */
+.covlab-panel, .atk-cov {
+  --ev-none: #1d1b18;
+  --ev-explains: #257de0;
+  --ev-corpus: #6aabf1;
+  --ev-detected: #b6d5f8;
+  --ev-missed: #dc3c3d;
+  --viz-surface: #0a0908;
+  --viz-grid: rgba(212, 175, 55, 0.14);
+}
+.covlab-cell[data-ev='T'], .covlab-swatch[data-ev='T'], .covlab-mini-cell[data-ev='T'] { background: var(--ev-detected); color: #0a0908; }
+.covlab-cell[data-ev='M'], .covlab-swatch[data-ev='M'], .covlab-mini-cell[data-ev='M'] { background: var(--ev-missed); color: #0a0908; }
+.covlab-cell[data-ev='C'], .covlab-swatch[data-ev='C'], .covlab-mini-cell[data-ev='C'] { background: var(--ev-corpus); color: #0a0908; }
+.covlab-cell[data-ev='E'], .covlab-swatch[data-ev='E'], .covlab-mini-cell[data-ev='E'] { background: var(--ev-explains); color: #0a0908; }
+.covlab-cell[data-ev='-'], .covlab-swatch[data-ev='-'], .covlab-mini-cell[data-ev='-'] { background: var(--ev-none); color: var(--text-primary); }
+
+.covlab-panel {
+  position: fixed; z-index: 340; top: 64px; left: 50%; transform: translateX(-50%);
+  width: min(1180px, calc(100vw - 32px)); height: min(86vh, 920px);
+  display: flex; flex-direction: column;
+  background: rgba(10, 9, 8, 0.97); border: 1px solid rgba(212, 175, 55, 0.6);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.18), inset 0 0 40px rgba(0, 0, 0, 0.6);
+  color: var(--text-primary); font-family: var(--font-sans);
+}
+.covlab-panel[hidden] { display: none; }
+.covlab-headtools { display: flex; gap: 6px; align-items: center; }
+.covlab-tablebtn {
+  background: none; border: 1px solid rgba(212, 175, 55, 0.4); color: var(--text-primary);
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 2px; cursor: pointer;
+}
+.covlab-tablebtn.active, .covlab-tablebtn:hover { background: rgba(212, 175, 55, 0.15); }
+.covlab-body { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 16px; }
+.covlab-section h4 { margin: 0 0 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; color: #f4cf5e; }
+.covlab-sub { margin: 0 0 8px; font-size: 10px; line-height: 1.45; color: var(--text-secondary); max-width: 92ch; }
+.covlab-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+
+/* KPI tiles (proportional figures on the big numbers) */
+.covlab-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.covlab-kpi { padding: 10px 12px; border: 1px solid rgba(212, 175, 55, 0.22); border-radius: 4px; background: rgba(255, 255, 255, 0.02); min-width: 0; }
+.covlab-kpi-label { font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
+.covlab-kpi-value { margin-top: 4px; font-size: 30px; font-weight: 600; line-height: 1.1; color: #f4cf5e; font-variant-numeric: proportional-nums; }
+.covlab-kpi-delta { margin-top: 2px; font-size: 10.5px; color: var(--text-primary); }
+.covlab-kpi-sub { margin-top: 4px; font-size: 9.5px; line-height: 1.4; color: var(--text-secondary); }
+.covlab-meter { position: relative; height: 6px; margin-top: 7px; border-radius: 3px; background: rgba(182, 213, 248, 0.14); }
+.covlab-meter-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--ev-detected); }
+.covlab-meter-bar { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--text-primary); }
+.covlab-kpis.compact { gap: 6px; margin-bottom: 4px; }
+.covlab-kpis.compact .covlab-kpi { padding: 6px 8px; }
+.covlab-kpis.compact .covlab-kpi-label { font-size: 8px; letter-spacing: 0.05em; }
+.covlab-kpis.compact .covlab-kpi-value { font-size: 18px; }
+.covlab-kpis.compact .covlab-kpi-delta { font-size: 9px; }
+.covlab-kpis.compact .covlab-kpi-sub { display: none; }
+
+/* legend */
+.covlab-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 8px; font-size: 10px; color: var(--text-secondary); }
+.covlab-legend-item { display: inline-flex; align-items: center; }
+.covlab-swatch {
+  display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-right: 5px;
+  border-radius: 3px; font-size: 10px; font-weight: 700; line-height: 1;
+}
+.covlab-active-dot { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #f4cf5e; box-shadow: 0 0 0 2px var(--viz-surface); }
+
+/* the matrix: 2px surface gaps between cells, 4px rounded marks */
+.covlab-matrix { display: grid; gap: 4px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; scrollbar-color: rgba(212, 175, 55, 0.5) transparent; }
+.covlab-col { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.covlab-col-head {
+  display: flex; flex-direction: column; gap: 2px; min-height: 40px; margin-bottom: 2px; padding-bottom: 4px;
+  border-bottom: 1px solid var(--viz-grid); font-size: 9px; line-height: 1.25;
+}
+.covlab-col-name { font-weight: 600; color: var(--text-primary); overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
+.covlab-col-count { font-family: var(--font-mono); font-size: 8.5px; color: var(--text-secondary); }
+.covlab-cell {
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: 2px;
+  height: 18px; padding: 0 4px; border: 0; border-radius: 3px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 9px; text-align: left;
+}
+.covlab-cell:hover { filter: brightness(1.12); }
+.covlab-cell:focus-visible { outline: 2px solid #f4cf5e; outline-offset: 1px; }
+.covlab-cell-glyph { font-weight: 700; }
+.covlab-cell .covlab-active-dot { position: absolute; top: 2px; right: 2px; width: 5px; height: 5px; margin: 0; box-shadow: 0 0 0 1.5px var(--viz-surface); }
+.covlab-cell-glyph + .covlab-active-dot { right: 12px; }
+.covlab-detail { min-height: 64px; margin-top: 10px; padding: 8px 10px; border: 1px solid rgba(212, 175, 55, 0.22); border-radius: 4px; font-size: 11px; }
+.covlab-detail-top { display: flex; align-items: center; color: #f4cf5e; }
+.covlab-detail-ev { margin-top: 4px; color: var(--text-primary); }
+.covlab-detail-tac { margin-top: 2px; font-size: 10px; color: var(--text-secondary); }
+.covlab-detail-acts { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+.covlab-detail-hint { color: var(--text-secondary); font-size: 10px; }
+.covlab-mitre { font-family: var(--font-mono); font-size: 9px; color: var(--text-primary); }
+
+/* "how each fix moved detection" — meter list */
+.covlab-meters { display: flex; flex-direction: column; gap: 6px; }
+.covlab-meter-row, .covlab-meter-axis { display: grid; grid-template-columns: minmax(130px, 1.4fr) 2fr 48px; align-items: center; gap: 8px; }
+.covlab-meter-row { padding: 2px 0; font-size: 10px; color: var(--text-secondary); border-radius: 2px; }
+.covlab-meter-row:focus-visible { outline: 1px solid #f4cf5e; }
+.covlab-meter-row.final { color: var(--text-primary); }
+.covlab-track { position: relative; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.05); }
+.covlab-track-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: rgba(182, 213, 248, 0.38); }
+.covlab-meter-row.final .covlab-track-fill { background: var(--ev-detected); }
+.covlab-track-bar { position: absolute; top: -3px; bottom: -3px; width: 1.5px; background: var(--text-secondary); }
+.covlab-meter-val { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.covlab-meter-axis { font-size: 9px; color: var(--text-secondary); }
+.covlab-meter-axis-note { grid-column: 2 / 4; }
+
+/* precision vs recall chart */
+.covlab-ops { display: block; width: 100%; height: auto; max-height: 280px; }
+.covlab-ops-grid line { stroke: var(--viz-grid); stroke-width: 1; }
+.covlab-ops-grid .covlab-ops-axis { stroke: rgba(212, 175, 55, 0.35); }
+.covlab-ops-tick { fill: var(--text-secondary); font-size: 9px; font-family: var(--font-mono); }
+.covlab-ops-title { fill: var(--text-secondary); font-size: 9px; }
+.covlab-ops-bar { stroke: var(--text-secondary); stroke-width: 1; }
+.covlab-ops-barlabel { fill: var(--text-secondary); font-size: 8.5px; }
+.covlab-ops-line { fill: none; stroke: var(--ev-corpus); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.covlab-ops-pt { fill: var(--ev-corpus); stroke: var(--viz-surface); stroke-width: 2; }
+.covlab-ops-pt.head { fill: var(--ev-detected); }
+.covlab-ops-label { fill: var(--text-primary); font-size: 9.5px; paint-order: stroke; stroke: var(--viz-surface); stroke-width: 3px; stroke-linejoin: round; }
+.covlab-ops-hit { fill: transparent; }
+.covlab-ops-hit:focus-visible { outline: none; stroke: #f4cf5e; stroke-width: 1.5; }
+
+/* tooltip + table view + footer */
+.covlab-tip {
+  position: fixed; z-index: 400; max-width: 280px; padding: 6px 8px; border-radius: 3px; pointer-events: none;
+  background: #141210; border: 1px solid rgba(212, 175, 55, 0.5); color: var(--text-primary);
+  font-size: 10.5px; line-height: 1.45; white-space: pre-line;
+}
+.covlab-tip[hidden] { display: none; }
+.covlab-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+.covlab-table caption { padding-bottom: 6px; text-align: left; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #f4cf5e; }
+.covlab-table th, .covlab-table td { padding: 4px 6px; text-align: left; border-bottom: 1px solid var(--viz-grid); }
+.covlab-table th { font-weight: 600; color: var(--text-secondary); }
+.covlab-table td { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.covlab-foot { margin: 0; font-size: 9.5px; line-height: 1.5; color: var(--text-secondary); }
+
+/* SITREP card: matrix thumbnail → opens the lab */
+.atk-cov-thumb {
+  display: flex; flex-direction: column; gap: 5px; width: 100%; margin: 8px 0 6px; padding: 6px;
+  background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(212, 175, 55, 0.22); border-radius: 3px; cursor: pointer;
+}
+.atk-cov-thumb:hover { border-color: #f4cf5e; }
+.atk-cov-thumb:focus-visible { outline: 2px solid #f4cf5e; outline-offset: 1px; }
+.atk-cov-thumb-cta { align-self: flex-end; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.04em; color: var(--text-primary); }
+.covlab-mini { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; align-items: start; }
+.covlab-mini-col { display: flex; flex-direction: column; gap: 1px; }
+.covlab-mini-cell { height: 4px; border-radius: 1px; }
+.atk-cov .covlab-legend { gap: 3px 8px; font-size: 9px; }
+.atk-cov .covlab-swatch { width: 10px; height: 10px; margin-right: 3px; font-size: 7px; }
+.atk-cov-actions { display: flex; gap: 6px; margin: 2px 0 8px; }
+
+@media (max-width: 640px) {
+  .covlab-panel { top: 8px; height: calc(100vh - 16px); }
+  .covlab-kpis { grid-template-columns: 1fr; }
+  .covlab-meter-row, .covlab-meter-axis { grid-template-columns: minmax(96px, 1fr) 1.4fr 44px; }
+}

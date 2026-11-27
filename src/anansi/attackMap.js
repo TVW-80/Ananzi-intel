@@ -31,6 +31,7 @@ import { createSitrep } from './sitrep.js';
 import { glyphBillboard } from './markerIcons.js';
 import { buildReplay } from '../data/replayModel.js';
 import { createCopilot, groundingContext } from './copilot.js';
+import { createCoverageLab } from './coverageLab.js';
 
 // Distinct glyph per category (monochrome symbols; coloured by the SVG badge).
 const GLYPH = Object.freeze({ source: '⌖', malware: '☣', phishing: '✉', leak: '↻', hijack: '⇄' });
@@ -275,7 +276,10 @@ function createHud({ onReplay = null } = {}) {
   track.append(lane);
   ticker.append(tag, track);
 
-  const sitrep = createSitrep(document, { onReplay, onExplain: (focus) => explainFocus(focus) });
+  // ATT&CK COVERAGE LAB — the visual drill-down, opened from SITREP's coverage card.
+  const lab = createCoverageLab(document, { onExplain: (focus) => explainFocus(focus) });
+  document.body.append(lab.element);
+  const sitrep = createSitrep(document, { onReplay, onExplain: (focus) => explainFocus(focus), onOpenLab: () => lab.open() });
   document.body.append(sitrep.element);
   for (const type of ['pointerdown', 'dblclick']) sitrepBtn.addEventListener(type, (e) => e.stopPropagation());
   sitrepBtn.addEventListener('click', (event) => {
@@ -340,7 +344,9 @@ function createHud({ onReplay = null } = {}) {
   function explainFocus(focus) {
     const f = focus || {};
     setAsk(true);
-    if (f.kind === 'coverage') {
+    if (f.kind === 'technique') {
+      copilot.ask(`In plain English, what is ${f.title || 'this ATT&CK technique'}, what does F.A.N.G.S's measured evidence say about detecting it, and what would close the gap? Use only the data.`, { technique: f });
+    } else if (f.kind === 'coverage') {
       copilot.ask('In plain English, explain these ATT&CK detection gaps and tell me what to fix first — only what the eval data supports.', { coverage: f });
     } else if (f.kind === 'alert') {
       copilot.ask(`In plain English, explain this alert and what I should do about it, using only what the data supports: "${f.title || 'this alert'}".`, { alert: f });
@@ -517,6 +523,8 @@ function createHud({ onReplay = null } = {}) {
       sitrep.dispose();
       reconPanel.remove();
       copilotPanel.remove();
+      lab.close();
+      lab.element.remove();
       hud.remove();
     },
     /** Open the one-pane rolling dashboard (attacks + AI-security + cyber news). */

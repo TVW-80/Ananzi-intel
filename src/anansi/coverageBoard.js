@@ -1,57 +1,47 @@
 /**
- * Ananzi FANGS — ATT&CK DETECTION COVERAGE board.
+ * Ananzi FANGS — ATT&CK DETECTION COVERAGE board (the SITREP summary card).
  *
- * Surfaces F.A.N.G.S's own, measured MITRE ATT&CK coverage in the SITREP: how
- * much of the Enterprise matrix it attributes and detects, the detection
- * scorecard (precision / recall / F1 vs ground truth), and any ATT&CK drift —
- * the output of the offline judge in tools/attack-eval, scored against the live
- * ATT&CK STIX matrix, Atomic Red Team and SigmaHQ.
+ * A compact read of F.A.N.G.S's own measured MITRE ATT&CK coverage: KPI tiles
+ * (detection on real attack traces, alert precision, techniques caught), a
+ * thumbnail of the ATT&CK matrix, the three coverage surfaces, the command-
+ * corpus scorecard and ATT&CK drift. "open lab ▸" (or the thumbnail) opens the
+ * full ATT&CK COVERAGE LAB (coverageLab.js) — the visuals live there, so the
+ * SITREP stays uncluttered.
  *
- * Honest by construction: this is a dated SNAPSHOT of a reproducible evaluation,
- * not a live claim. Regenerate with `node tools/attack-eval/sigma-eval.mjs` +
- * `coverage.mjs` and paste the numbers below. English-only (src/anansi/**).
- *
- * Rendering only.
+ * Honest by construction: every number comes from coverageData.generated.js,
+ * which tools/attack-eval/snapshot.mjs builds from the judges' result files.
+ * Only labels, colours and notes are written here. English-only (src/anansi/**).
  */
+import { COVERAGE_DATA } from './coverageData.generated.js';
+import { kpiTiles, miniMatrix, legend } from './coverageLab.js';
 
-/** Dated snapshot of tools/attack-eval (keep in sync with its results-*.json). */
+const D = COVERAGE_DATA;
+
+/** UI-only text per coverage surface; the numbers are merged in from the generated data. */
+const SURFACE_UI = Object.freeze({
+  active: { label: 'Active attribution', color: '#ff2b2b', note: 'derived from raw live signals (ddos→T1498, c2→T1071…)' },
+  explains: { label: 'Explains (feed id)', color: '#d4af37', note: 'rendered when a feed supplies the technique id' },
+  detection: { label: 'Sigma detection', color: '#3fa7ff', note: 'Sigma rules verified against the Atomic Red Team command corpus' },
+});
+
+/** The measured snapshot (generated numbers + UI labels). Regenerate, never retype. */
 export const COVERAGE_SNAPSHOT = Object.freeze({
-  attack: 'v20.1',
-  enterprise: { techniques: 227, tactics: 15 },
-  surfaces: [
-    { id: 'active', label: 'Active attribution', techniques: 12, pct: 5.3, tactics: 9, color: '#ff2b2b', note: 'derived from raw signals (ddos→T1498, c2→T1071…)' },
-    { id: 'explains', label: 'Explains (feed id)', techniques: 55, pct: 24.2, tactics: 15, color: '#d4af37', note: 'rendered when a feed supplies the technique id' },
-    { id: 'detection', label: 'Sigma detection', techniques: 85, pct: 37.4, tactics: 13, color: '#3fa7ff', note: 'process_creation + PowerShell script-block, verified vs ground truth' },
-  ],
-  scorecard: { f1: 0.275, alertPrecision: 0.323, recall: 0.239, breadthDetected: 85, breadthCovered: 122, bar: 0.8, events: 3263, rules: 1402 },
-  // Higher-fidelity read: full multi-sensor Sigma corpus replayed over real
-  // labeled Windows telemetry (OTRF Security-Datasets). See tools/attack-eval.
-  telemetry: {
-    captureRecall: 0.579, detected: 55, captures: 95, techDetected: 20, techLabeled: 31, sensors: 6, rules: 2189,
-    // ATT&CK techniques present in the labeled telemetry that F.A.N.G.S does not
-    // yet detect — the real detection to-do list (grounds the copilot's gaps).
-    undetected: ['T1012', 'T1049', 'T1056', 'T1110', 'T1123', 'T1135', 'T1210', 'T1222', 'T1550', 'T1558', 'T1562'],
-  },
-  drift: [
-    { from: 'T1562', to: 'T1685', name: 'Disable or Modify Tools' },
-    { from: 'T1574.002', to: 'T1574.001', name: 'DLL' },
-  ],
-  source: 'ATT&CK v20.1 · Atomic Red Team · SigmaHQ · OTRF Security-Datasets',
+  attack: D.attack,
+  enterprise: D.enterprise,
+  surfaces: ['active', 'explains', 'detection'].map((id) => Object.freeze({ id, ...SURFACE_UI[id], ...D.surfaces[id] })),
+  scorecard: D.scorecard,
+  telemetry: D.telemetry,
+  drift: D.drift,
+  source: D.source,
 });
 
 const pct1 = (x) => `${(100 * x).toFixed(1)}%`;
-
-function el(doc, tag, cls, text) {
-  const n = doc.createElement(tag);
-  if (cls) n.className = cls;
-  if (text != null) n.textContent = text;
-  return n;
-}
 
 /** Compact, bounded coverage-gap payload for grounding the copilot's "explain". */
 export function coverageGap(snapshot = COVERAGE_SNAPSHOT) {
   const sc = snapshot.scorecard;
   const tm = snapshot.telemetry || {};
+  const tiers = (tm.operatingPoints || []).map((o) => `≥${o.level}: recall ${pct1(o.recall)} / precision ${pct1(o.alertPrecision)}`);
   return {
     kind: 'coverage',
     title: 'ATT&CK detection coverage',
@@ -62,15 +52,24 @@ export function coverageGap(snapshot = COVERAGE_SNAPSHOT) {
     recall: sc.recall,
     breadth: `${sc.breadthDetected}/${sc.breadthCovered}`,
     realTelemetryRecall: tm.captureRecall ?? null,
+    realTelemetryPrecision: tm.alertPrecision ?? null,
     techniquesDetected: tm.techDetected ?? null,
     techniquesLabeled: tm.techLabeled ?? null,
     undetectedTechniques: tm.undetected || [],
+    alertTiers: tiers,
     drift: (snapshot.drift || []).map((d) => `${d.from}→${d.to}`),
   };
 }
 
-/** The ATT&CK coverage board: { element, update() }. update is a no-op (static snapshot). */
-export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT, { onExplain = null } = {}) {
+function el(doc, tag, cls, text) {
+  const n = doc.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+/** The ATT&CK coverage board: { element, update() }. update is a no-op (static, generated snapshot). */
+export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT, { onExplain = null, onOpenLab = null } = {}) {
   const wrap = el(doc, 'section', 'atk-cov collapsed');
   wrap.setAttribute('aria-label', 'ATT&CK detection coverage');
   const head = el(doc, 'div', 'atk-cov-head');
@@ -78,15 +77,42 @@ export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT
   const toggle = el(doc, 'button', 'atk-cov-toggle', '▾');
   toggle.type = 'button';
   const title = el(doc, 'span', 'atk-cov-title', '◆ ATT&CK COVERAGE · measured');
-  const tally = el(doc, 'span', 'atk-cov-tally', `${snapshot.surfaces.find((s) => s.id === 'detection').techniques}/${snapshot.enterprise.techniques}`);
+  const tm = snapshot.telemetry || {};
+  const tally = el(doc, 'span', 'atk-cov-tally', tm.captureRecall != null ? `${pct1(tm.captureRecall)} on real traces` : '');
   headL.append(toggle, title);
   head.append(headL, tally);
 
   const body = el(doc, 'div', 'atk-cov-body');
-  const sub = el(doc, 'div', 'atk-cov-sub', `vs MITRE ATT&CK ${snapshot.attack} — ${snapshot.enterprise.techniques} techniques · ${snapshot.enterprise.tactics} tactics`);
-  body.append(sub);
+  body.append(kpiTiles(doc, D, { compact: true }));
 
-  // Coverage bars — one row per surface.
+  // Thumbnail of the matrix — one click opens the lab.
+  const thumb = el(doc, 'button', 'atk-cov-thumb');
+  thumb.type = 'button';
+  thumb.setAttribute('aria-label', `Open the ATT&CK coverage lab — ${D.matrix.length} tactics, evidence per technique`);
+  thumb.append(miniMatrix(doc, D), el(doc, 'span', 'atk-cov-thumb-cta', 'ATT&CK matrix · open lab ▸'));
+  if (onOpenLab) thumb.addEventListener('click', () => { try { onOpenLab(); } catch { /* lab not ready */ } });
+  else thumb.disabled = true;
+  body.append(thumb, legend(doc, { active: false }));
+
+  const actions = el(doc, 'div', 'atk-cov-actions');
+  if (onOpenLab) {
+    const open = el(doc, 'button', 'atk-cov-explain', 'open lab ▸');
+    open.type = 'button';
+    open.addEventListener('click', () => { try { onOpenLab(); } catch { /* lab not ready */ } });
+    actions.append(open);
+  }
+  if (onExplain) {
+    const btn = el(doc, 'button', 'atk-cov-explain', 'explain gaps ▸');
+    btn.type = 'button';
+    btn.title = 'Ask the grounded copilot to explain these detection gaps and what to fix first';
+    btn.addEventListener('click', () => { try { onExplain(coverageGap(snapshot)); } catch { /* copilot not ready */ } });
+    actions.append(btn);
+  }
+  if (actions.childElementCount) body.append(actions);
+
+  const sub = el(doc, 'div', 'atk-cov-sub', `coverage surfaces vs MITRE ATT&CK ${snapshot.attack} — ${snapshot.enterprise.techniques} techniques · ${snapshot.enterprise.tactics} tactics`);
+  body.append(sub);
+  // Coverage meter list — one row per surface (name · bar · figure).
   for (const s of snapshot.surfaces) {
     const row = el(doc, 'div', 'atk-cov-row');
     const name = el(doc, 'span', 'atk-cov-name', s.label);
@@ -101,39 +127,26 @@ export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT
     body.append(row);
   }
 
-  // Detection scorecard.
+  // Command-corpus scorecard (detector scope — the scope its judge reports).
   const sc = snapshot.scorecard;
   const card = el(doc, 'div', 'atk-cov-score');
   const pass = sc.f1 >= sc.bar;
   card.append(
-    el(doc, 'span', 'atk-cov-score-h', 'DETECTION SCORECARD'),
+    el(doc, 'span', 'atk-cov-score-h', 'COMMAND-CORPUS SCORECARD'),
     el(doc, 'span', `atk-cov-badge ${pass ? 'ok' : 'below'}`, `F1 ${pct1(sc.f1)} / bar ${pct1(sc.bar)}`),
   );
-  const detail = el(doc, 'div', 'atk-cov-score-detail',
-    `command corpus: alert-P ${pct1(sc.alertPrecision)} · recall ${pct1(sc.recall)} · breadth ${sc.breadthDetected}/${sc.breadthCovered} (${pct1(sc.breadthDetected / sc.breadthCovered)}) · ${sc.events.toLocaleString('en-US')} events / ${sc.rules.toLocaleString('en-US')} rules`);
-  card.append(detail);
-  const tm = snapshot.telemetry;
-  if (tm) {
+  card.append(el(doc, 'div', 'atk-cov-score-detail',
+    `alert-P ${pct1(sc.alertPrecision)} · recall ${pct1(sc.recall)} · breadth ${sc.breadthDetected}/${sc.breadthCovered} (${pct1(sc.breadthDetected / sc.breadthCovered)}) · ${sc.events.toLocaleString('en-US')} events / ${sc.rules.toLocaleString('en-US')} rules`));
+  if (tm.captureRecall != null) {
     card.append(el(doc, 'div', 'atk-cov-score-detail',
-      `real telemetry: ${pct1(tm.captureRecall)} capture detection (${tm.detected}/${tm.captures}) · ${tm.techDetected}/${tm.techLabeled} techniques · ${tm.sensors} sensors · ${tm.rules.toLocaleString('en-US')} rules`));
-  }
-  // "explain ▸" — ask the grounded copilot to read these gaps in plain English.
-  if (onExplain) {
-    const btn = el(doc, 'button', 'atk-cov-explain', 'explain gaps ▸');
-    btn.type = 'button';
-    btn.title = 'Ask the grounded copilot to explain these detection gaps and what to fix first';
-    btn.addEventListener('click', () => { try { onExplain(coverageGap(snapshot)); } catch { /* copilot not ready */ } });
-    card.append(btn);
+      `real telemetry: ${pct1(tm.captureRecall)} capture detection (${tm.detected}/${tm.captures}) · ${tm.techDetected}/${tm.techLabeled} techniques · ${tm.sensors} log sources contributing · ${tm.rules.toLocaleString('en-US')} rules`));
   }
   body.append(card);
 
-  // ATT&CK drift — retired ids F.A.N.G.S still references, with replacements.
   if (snapshot.drift.length) {
     const drift = el(doc, 'div', 'atk-cov-drift');
     drift.append(el(doc, 'span', 'atk-cov-drift-h', `⚠ ATT&CK DRIFT · ${snapshot.drift.length}`));
-    for (const d of snapshot.drift) {
-      drift.append(el(doc, 'span', 'atk-cov-drift-item', `${d.from} → ${d.to} (${d.name})`));
-    }
+    for (const d of snapshot.drift) drift.append(el(doc, 'span', 'atk-cov-drift-item', `${d.from} → ${d.to} (${d.name})`));
     body.append(drift);
   }
   body.append(el(doc, 'div', 'atk-cov-src', `scored against ${snapshot.source} · tools/attack-eval`));
@@ -155,5 +168,5 @@ export function createCoverageBoard(doc = document, snapshot = COVERAGE_SNAPSHOT
   title.addEventListener('click', () => set(!collapsed));
   apply();
 
-  return { element: wrap, update() { /* static snapshot — nothing to refresh */ } };
+  return { element: wrap, update() { /* static generated snapshot — nothing to refresh */ } };
 }

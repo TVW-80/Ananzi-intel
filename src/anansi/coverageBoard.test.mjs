@@ -70,3 +70,26 @@ test('ATT&CK drift entries resolve a retired id to a live replacement', () => {
     assert.ok(typeof d.name === 'string' && d.name.length);
   }
 });
+
+// ── the UI's numbers ARE the judges' numbers (drift guard) ───────────────────
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { COVERAGE_DATA } from './coverageData.generated.js';
+import { buildSnapshot, renderModule, loadResults, evidenceSets, evidenceFor } from '../../tools/attack-eval/snapshot.mjs';
+
+test('coverageData.generated.js is exactly what snapshot.mjs builds from the committed result files', () => {
+  // The matrix skeleton (names/tactics) comes from ATT&CK STIX at generation time; reuse it from the file.
+  const skeleton = COVERAGE_DATA.matrix.map((t) => ({ id: t.id, short: t.short, name: t.name, techniques: t.techniques.map(([id, name]) => [id, name]) }));
+  const rebuilt = renderModule(buildSnapshot({ ...loadResults(fileURLToPath(new URL('../../tools/attack-eval/', import.meta.url))), skeleton }));
+  const committed = readFileSync(fileURLToPath(new URL('./coverageData.generated.js', import.meta.url)), 'utf8');
+  assert.equal(committed, rebuilt, 'regenerate: node tools/attack-eval/snapshot.mjs (never hand-edit the generated file)');
+});
+
+test('every matrix cell shows the strongest evidence, real traces outranking the lab', () => {
+  const sets = evidenceSets(loadResults(fileURLToPath(new URL('../../tools/attack-eval/', import.meta.url))));
+  for (const t of COVERAGE_DATA.matrix) for (const [id, , ev] of t.techniques) assert.equal(ev, evidenceFor(id, sets), id);
+  assert.equal(evidenceFor('T9999', { telemetryDetected: new Set(), telemetryMissed: new Set(['T9999']), corpus: new Set(['T9999']), explains: new Set() }), 'M');
+  assert.ok(S.telemetry.ablation.length >= 2 && S.telemetry.ablation[0].id === 'baseline', 'ablation starts at the shipped baseline');
+  assert.ok(S.telemetry.operatingPoints.length === 5, 'all five Sigma levels are reported');
+  assert.equal(S.attack, 'v20.1');
+});
