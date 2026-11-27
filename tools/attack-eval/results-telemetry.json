@@ -1,104 +1,104 @@
 {
-  "generatedAt": "2026-11-27T02:06:03.037Z",
+  "generatedAt": "2026-11-27T23:54:00.077Z",
   "datasets": 95,
-  "rules": 2477,
-  "serviceRules": 288,
-  "specRules": 185,
-  "unsupportedRules": 0,
-  "logSources": 60,
+  "rules": 2959,
+  "serviceRules": 325,
+  "specRules": 218,
+  "unsupportedRules": 3,
+  "logSources": 65,
   "eventsScored": 635008,
   "routing": "Generated from pySigma (pysigma-pipeline-windows 3.0.0, pysigma-pipeline-sysmon 3.0.0, pysigma 2.1.2). Do not edit by hand; regenerate with tools/attack-eval/README.",
-  "datasetDetectionRecall": 0.7053,
-  "detectedDatasets": 67,
+  "datasetDetectionRecall": 0.7579,
+  "detectedDatasets": 72,
   "techniqueBreadth": 0.7813,
   "techniquesDetected": 25,
   "techniquesLabeled": 32,
-  "alertPrecision": 0.1815,
-  "f1": 0.2887,
+  "alertPrecision": 0.2564,
+  "f1": 0.3831,
   "raw": {
     "note": "same routing, ATT&CK ids NOT normalized through revoked-by",
-    "datasetDetectionRecall": 0.6632,
-    "alertPrecision": 0.1539,
-    "f1": 0.2499,
-    "detectedDatasets": 63
+    "datasetDetectionRecall": 0.7158,
+    "alertPrecision": 0.2472,
+    "f1": 0.3675,
+    "detectedDatasets": 68
   },
   "ablation": [
     {
       "id": "baseline",
       "label": "baseline (as shipped)",
-      "recall": 0.5789,
-      "alertPrecision": 0.238,
-      "f1": 0.3374,
-      "detected": 55
+      "recall": 0.6526,
+      "alertPrecision": 0.2879,
+      "f1": 0.3995,
+      "detected": 62
     },
     {
       "id": "sysmon-spec",
       "label": "+ Sigma-spec Sysmon EventID map",
-      "recall": 0.5789,
-      "alertPrecision": 0.2376,
-      "f1": 0.3369,
-      "detected": 55
+      "recall": 0.6526,
+      "alertPrecision": 0.2822,
+      "f1": 0.394,
+      "detected": 62
     },
     {
       "id": "services",
       "label": "+ service rules (Security, System…)",
-      "recall": 0.6632,
-      "alertPrecision": 0.1309,
-      "f1": 0.2186,
-      "detected": 63
+      "recall": 0.7158,
+      "alertPrecision": 0.233,
+      "f1": 0.3516,
+      "detected": 68
     },
     {
       "id": "classic",
       "label": "+ classic PowerShell 400/600/800",
-      "recall": 0.6632,
-      "alertPrecision": 0.1309,
-      "f1": 0.2186,
-      "detected": 63
+      "recall": 0.7158,
+      "alertPrecision": 0.233,
+      "f1": 0.3516,
+      "detected": 68
     },
     {
       "id": "full",
       "label": "+ MITRE revoked-by id normalization",
-      "recall": 0.7053,
-      "alertPrecision": 0.1537,
-      "f1": 0.2524,
-      "detected": 67
+      "recall": 0.7579,
+      "alertPrecision": 0.2416,
+      "f1": 0.3665,
+      "detected": 72
     },
     {
       "id": "engine",
       "label": "+ Sigma modifiers per spec (cidr, windash…)",
-      "recall": 0.7053,
-      "alertPrecision": 0.1815,
-      "f1": 0.2887,
-      "detected": 67
+      "recall": 0.7579,
+      "alertPrecision": 0.2564,
+      "f1": 0.3831,
+      "detected": 72
     }
   ],
   "operatingPoints": [
     {
       "level": "informational",
-      "recall": 0.7053,
-      "alertPrecision": 0.1815,
-      "f1": 0.2887,
-      "detected": 67
+      "recall": 0.7579,
+      "alertPrecision": 0.2564,
+      "f1": 0.3831,
+      "detected": 72
     },
     {
       "level": "low",
-      "recall": 0.7053,
-      "alertPrecision": 0.2538,
-      "f1": 0.3732,
-      "detected": 67
+      "recall": 0.7579,
+      "alertPrecision": 0.2833,
+      "f1": 0.4125,
+      "detected": 72
     },
     {
       "level": "medium",
-      "recall": 0.6947,
-      "alertPrecision": 0.2944,
-      "f1": 0.4136,
-      "detected": 66
+      "recall": 0.7053,
+      "alertPrecision": 0.6118,
+      "f1": 0.6552,
+      "detected": 67
     },
     {
       "level": "high",
       "recall": 0.5053,
-      "alertPrecision": 0.3114,
-      "f1": 0.3854,
+      "alertPrecision": 0.3111,
+      "f1": 0.3851,
       "detected": 48
     },
     {
@@ -121,13 +121,6 @@
       "id": "SDWIN-190319131123",
       "labeled": [
         "T1550.002"
-      ],
-      "by": "services"
-    },
-    {
-      "id": "SDWIN-190518202151",
-      "labeled": [
-        "T1003.001"
       ],
       "by": "services"
     },
@@ -156,13 +149,6 @@
       "id": "SDWIN-200806015757",
       "labeled": [
         "T1021.002"
-      ],
-      "by": "services"
-    },
-    {
-      "id": "SDWIN-200922042230",
-      "labeled": [
-        "T1003.002"
       ],
       "by": "services"
     },
@@ -197,15 +183,15 @@
   ],
   "lostVsBaseline": [],
   "sensorHits": {
+    "process_access": 1515,
+    "registry_event": 294,
+    "process_creation": 224,
     "ps_module": 201,
-    "process_creation": 184,
-    "service:security": 128,
-    "create_remote_thread": 91,
-    "registry_event": 43,
-    "image_load": 33,
-    "network_connection": 32,
-    "process_access": 32,
-    "file_event": 16,
+    "service:security": 130,
+    "create_remote_thread": 92,
+    "image_load": 42,
+    "network_connection": 33,
+    "file_event": 27,
     "registry_set": 9,
     "wmi_event": 3,
     "pipe_created": 2,
@@ -259,49 +245,10 @@
       ],
       "fired": [
         "T1531",
-        "T1482",
-        "T1087",
-        "T1069",
+        "T1053",
         "T1059",
-        "T1201"
-      ]
-    },
-    {
-      "id": "SDWIN-190319020147",
-      "techniques": [
-        "T1069"
-      ],
-      "labeled": [
-        "T1069.001"
-      ],
-      "fired": [
-        "T1531",
-        "T1087"
-      ]
-    },
-    {
-      "id": "SDWIN-190319021158",
-      "techniques": [
-        "T1087"
-      ],
-      "labeled": [
-        "T1087.002"
-      ],
-      "fired": [
-        "T1201",
-        "T1531"
-      ]
-    },
-    {
-      "id": "SDWIN-190518201207",
-      "techniques": [
-        "T1069"
-      ],
-      "labeled": [
-        "T1069.002"
-      ],
-      "fired": [
-        "T1531",
+        "T1027",
+        "T1482",
         "T1087"
       ]
     },
@@ -314,12 +261,12 @@
         "T1021.003"
       ],
       "fired": [
+        "T1053",
         "T1531",
+        "T1003",
         "T1036",
         "T1059",
-        "T1112",
-        "T1491",
-        "T1564"
+        "T1027"
       ]
     },
     {
@@ -331,8 +278,10 @@
         "T1003.004"
       ],
       "fired": [
+        "T1053",
         "T1033",
         "T1087",
+        "T1055",
         "T1558",
         "T1531"
       ]
@@ -355,21 +304,6 @@
       ]
     },
     {
-      "id": "SDWIN-190625103712",
-      "techniques": [
-        "T1003"
-      ],
-      "labeled": [
-        "T1003.002"
-      ],
-      "fired": [
-        "T1531",
-        "T1033",
-        "T1087",
-        "T1012"
-      ]
-    },
-    {
       "id": "SDWIN-200805034820",
       "techniques": [
         "T1021"
@@ -378,7 +312,10 @@
         "T1021.002"
       ],
       "fired": [
-        "T1531"
+        "T1007",
+        "T1531",
+        "T1059",
+        "T1027"
       ]
     },
     {
@@ -390,7 +327,8 @@
         "T1021.002"
       ],
       "fired": [
-        "T1531"
+        "T1531",
+        "T1053"
       ]
     },
     {
@@ -402,7 +340,8 @@
         "T1021.002"
       ],
       "fired": [
-        "T1531"
+        "T1531",
+        "T1053"
       ]
     },
     {
@@ -414,6 +353,7 @@
         "T1021.002"
       ],
       "fired": [
+        "T1053",
         "T1531",
         "T1003",
         "T1059"
@@ -456,10 +396,11 @@
       ],
       "fired": [
         "T1531",
+        "T1059",
+        "T1027",
+        "T1053",
         "T1547",
-        "T1036",
-        "T1203",
-        "T1204"
+        "T1036"
       ]
     },
     {
@@ -474,7 +415,9 @@
         "T1201",
         "T1531",
         "T1036",
-        "T1203"
+        "T1204",
+        "T1203",
+        "T1053"
       ]
     },
     {
@@ -497,7 +440,9 @@
       ],
       "fired": [
         "T1574",
-        "T1055"
+        "T1059",
+        "T1055",
+        "T1027"
       ]
     },
     {
@@ -510,6 +455,7 @@
       ],
       "fired": [
         "T1003",
+        "T1587",
         "T1202"
       ]
     },
@@ -556,24 +502,10 @@
       "fired": [
         "T1526",
         "T1087",
-        "T1083"
-      ]
-    },
-    {
-      "id": "SDWIN-201219075059",
-      "techniques": [
-        "T1053"
-      ],
-      "labeled": [
-        "T1053.005"
-      ],
-      "fired": [
-        "T1036",
-        "T1202",
+        "T1083",
         "T1059",
-        "T1134",
-        "T1003",
-        "T1027"
+        "T1027",
+        "T1047"
       ]
     },
     {
@@ -587,7 +519,10 @@
       "fired": [
         "T1531",
         "T1036",
-        "T1202"
+        "T1070",
+        "T1112",
+        "T1202",
+        "T1059"
       ]
     },
     {
@@ -601,10 +536,10 @@
       "fired": [
         "T1531",
         "T1036",
-        "T1204",
         "T1059",
-        "T1021",
-        "T1482"
+        "T1027",
+        "T1070",
+        "T1204"
       ]
     },
     {
@@ -619,8 +554,9 @@
         "T1531",
         "T1036",
         "T1059",
-        "T1204",
-        "T1202"
+        "T1027",
+        "T1070",
+        "T1204"
       ]
     },
     {
@@ -637,14 +573,14 @@
         "T1036",
         "T1059",
         "T1140",
-        "T1531"
+        "T1055"
       ]
     }
   ],
   "judge": {
     "bar": 0.8,
     "metric": "dataset detection recall",
-    "value": 0.7053,
+    "value": 0.7579,
     "pass": false
   }
 }

@@ -69,22 +69,29 @@ ATT&CK Enterprise universe: **227 techniques, 479 sub-techniques, 15 tactics.**
 ### Real-telemetry detection (multi-sensor) — `telemetry-eval.mjs`
 
 The command corpus is one sensor. This judge replays the **full Sigma corpus**
-(2,477 ATT&CK-tagged rules across 60 log sources, routed by Sigma's own
+(2,959 ATT&CK-tagged rules across 65 log sources — the main `rules/` plus
+`rules-emerging-threats/` and `rules-threat-hunting/`, routed by Sigma's own
 logsource taxonomy) over **real labeled Windows telemetry** — 95 OTRF
 Security-Datasets (Mordor) captures, 635k events of Sysmon, Security, PowerShell
 and other channels, each labeled with the ATT&CK technique it ran.
 
-**Ablation** — one fix at a time, same 95 captures, same judge. The baseline row
-reproduces the previously published numbers exactly, so the comparison is fair.
+The honest progression: **57.9%** recall as first shipped → **70.5%** after the
+routing/engine fixes below (main `rules/` only) → **75.8%** after also loading
+the +482 emerging-threats and threat-hunting rules the repo ships but the loader
+ignored. No gaming — just correct routing and the rules that were already there.
+
+**Ablation** — one fix at a time, same 95 captures, same judge, on the full
+2,959-rule corpus (so its baseline row, 65.3%, is higher than the 57.9% first
+shipped on `rules/` alone).
 
 | config | recall | alert-P | F1 | captures |
 | --- | --- | --- | --- | --- |
-| baseline (as first shipped) | 57.9% | 23.8% | 33.7% | 55/95 |
-| + Sigma-spec Sysmon EventID map | 57.9% | 23.8% | 33.7% | 55/95 |
-| + `service:` rules (Security, System, Defender…) | 66.3% | 13.1% | 21.9% | 63/95 |
-| + classic PowerShell 400/600/800 | 66.3% | 13.1% | 21.9% | 63/95 |
-| + MITRE revoked-by id normalization | 70.5% | 15.4% | 25.2% | 67/95 |
-| **+ Sigma modifiers per spec (cidr, windash…)** | **70.5%** | **18.2%** | **28.9%** | **67/95** |
+| baseline routing | 65.3% | 28.8% | 39.9% | 62/95 |
+| + Sigma-spec Sysmon EventID map | 65.3% | 28.2% | 39.4% | 62/95 |
+| + `service:` rules (Security, System, Defender…) | 71.6% | 23.3% | 35.2% | 68/95 |
+| + classic PowerShell 400/600/800 | 71.6% | 23.3% | 35.2% | 68/95 |
+| + MITRE revoked-by id normalization | 75.8% | 24.2% | 36.6% | 72/95 |
+| **+ Sigma modifiers per spec (cidr, windash…)** | **75.8%** | **25.6%** | **38.3%** | **72/95** |
 
 What each fix was, found by triaging misses in the raw data, not by tuning:
 
@@ -98,7 +105,7 @@ What each fix was, found by triaging misses in the raw data, not by tuning:
    which revoked T1562 (→ T1685, and T1562.004 → T1686 at sub-technique level).
    Labels and fired tags are both resolved through MITRE's STIX `revoked-by`
    relationships (full id first) — MITRE's identity map, not a fuzzy one. The
-   un-normalized ("raw ids") numbers are written alongside: 66.3 / 15.4 / 25.0%.
+   un-normalized ("raw ids") numbers are written alongside: 71.6 / 24.7 / 36.8%.
 3. **113 rules used modifiers the engine mis-evaluated.** Unknown modifiers fell
    back to plain equals, so `IpAddress|cidr: 10.0.0.0/8` never matched and a
    "logon **from a public IP**" rule fired on every private-network logon. The
@@ -120,17 +127,21 @@ each Sigma `level`. All five are reported; none was picked after the fact.
 
 | alert on level ≥ | recall | alert-P | F1 |
 | --- | --- | --- | --- |
-| informational (all rules) | 70.5% | 18.2% | 28.9% |
-| low | 70.5% | 25.4% | 37.3% |
-| medium | 69.5% | 29.4% | 41.4% |
+| informational (all rules) | 75.8% | 25.6% | 38.3% |
+| low | 75.8% | 28.3% | 41.2% |
+| **medium** | **70.5%** | **61.2%** | **65.5%** |
 | high | 50.5% | 31.1% | 38.5% |
 | critical | 6.3% | 70.6% | 11.6% |
 
-At `low` and `medium`, the detector now beats the shipped baseline on **both**
-recall and precision. Judge (detection recall ≥ 0.80): **BELOW BAR at 0.705,
-reported honestly.** Still undetected: T1012, T1049, T1056, T1110, T1135, T1210,
-T1222 — mostly discovery commands and SMB/lateral-movement captures where the
-only rule that fires is the informational `User Logoff` (T1531).
+The **medium** tier is the one a SOC would actually run: 70.5% recall at **61.2%
+precision** (F1 65.5%) — the emerging-threats rules it adds are high-fidelity, so
+tightening to medium+ barely costs recall while more than doubling precision.
+Judge (detection recall ≥ 0.80): **BELOW BAR at 0.758, reported honestly.** Still
+undetected: T1012, T1049, T1056, T1110, T1135, T1210, T1222 — mostly discovery
+commands and SMB/lateral-movement captures whose labeled technique either isn't
+in the captured telemetry or is detected under a different (correct) ATT&CK id;
+closing them further would mean a technique-equivalence map, which this harness
+deliberately refuses.
 
 ### Command-corpus judge: F1 ≥ 0.80 → **BELOW BAR, reported honestly**
 

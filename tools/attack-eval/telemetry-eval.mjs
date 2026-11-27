@@ -152,9 +152,16 @@ export function buildNormalizer(revokedBy) {
 }
 
 /** Load every Sigma rule carrying a technique, bucketed by logsource category. */
-export function loadAllRules(sigmaDir) {
+/** SigmaHQ rule directories to load. The main `rules/` plus the two other
+ *  directories of real detection rules the repo ships — emerging-threats
+ *  (specific campaigns/malware) and threat-hunting (broader-net hunts). These
+ *  are legitimate detections, not metric padding; their effect (recall up,
+ *  precision cost from the hunt rules) is measured in the ablation, not assumed. */
+export const RULE_ROOTS = Object.freeze(['rules', 'rules-emerging-threats', 'rules-threat-hunting']);
+
+export function loadAllRules(sigmaDir, roots = RULE_ROOTS) {
   const byCat = new Map();
-  const root = join(sigmaDir, 'rules');
+  const seen = new Set(); // a rule id can appear in more than one root; load it once
   const walk = (dir) => {
     for (const n of readdirSync(dir, { withFileTypes: true })) {
       const p = join(dir, n.name);
@@ -168,6 +175,8 @@ export function loadAllRules(sigmaDir) {
         if (!cat) continue;
         const techs = ruleTechniques(doc);
         if (!techs.length) continue;
+        if (doc.id && seen.has(doc.id)) continue; // dedup across rule roots
+        if (doc.id) seen.add(doc.id);
         if (!byCat.has(cat)) byCat.set(cat, []);
         const mods = ruleModifiers(doc);
         byCat.get(cat).push({
@@ -178,7 +187,7 @@ export function loadAllRules(sigmaDir) {
       }
     }
   };
-  if (existsSync(root)) walk(root);
+  for (const r of roots) { const root = join(sigmaDir, r); if (existsSync(root)) walk(root); }
   return byCat;
 }
 

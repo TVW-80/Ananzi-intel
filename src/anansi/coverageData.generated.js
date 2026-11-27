@@ -35,15 +35,15 @@ export const COVERAGE_DATA = Object.freeze({
   "rules": 1402
  },
  "telemetry": {
-  "captureRecall": 0.7053,
-  "detected": 67,
+  "captureRecall": 0.7579,
+  "detected": 72,
   "captures": 95,
   "techDetected": 25,
   "techLabeled": 32,
-  "alertPrecision": 0.1815,
-  "f1": 0.2887,
+  "alertPrecision": 0.2564,
+  "f1": 0.3831,
   "sensors": 14,
-  "rules": 2477,
+  "rules": 2959,
   "undetected": [
    "T1012",
    "T1049",
@@ -55,88 +55,88 @@ export const COVERAGE_DATA = Object.freeze({
   ],
   "raw": {
    "note": "same routing, ATT&CK ids NOT normalized through revoked-by",
-   "datasetDetectionRecall": 0.6632,
-   "alertPrecision": 0.1539,
-   "f1": 0.2499,
-   "detectedDatasets": 63
+   "datasetDetectionRecall": 0.7158,
+   "alertPrecision": 0.2472,
+   "f1": 0.3675,
+   "detectedDatasets": 68
   },
   "ablation": [
    {
     "id": "baseline",
     "label": "baseline (as shipped)",
-    "recall": 0.5789,
-    "alertPrecision": 0.238,
-    "f1": 0.3374,
-    "detected": 55
+    "recall": 0.6526,
+    "alertPrecision": 0.2879,
+    "f1": 0.3995,
+    "detected": 62
    },
    {
     "id": "sysmon-spec",
     "label": "+ Sigma-spec Sysmon EventID map",
-    "recall": 0.5789,
-    "alertPrecision": 0.2376,
-    "f1": 0.3369,
-    "detected": 55
+    "recall": 0.6526,
+    "alertPrecision": 0.2822,
+    "f1": 0.394,
+    "detected": 62
    },
    {
     "id": "services",
     "label": "+ service rules (Security, System…)",
-    "recall": 0.6632,
-    "alertPrecision": 0.1309,
-    "f1": 0.2186,
-    "detected": 63
+    "recall": 0.7158,
+    "alertPrecision": 0.233,
+    "f1": 0.3516,
+    "detected": 68
    },
    {
     "id": "classic",
     "label": "+ classic PowerShell 400/600/800",
-    "recall": 0.6632,
-    "alertPrecision": 0.1309,
-    "f1": 0.2186,
-    "detected": 63
+    "recall": 0.7158,
+    "alertPrecision": 0.233,
+    "f1": 0.3516,
+    "detected": 68
    },
    {
     "id": "full",
     "label": "+ MITRE revoked-by id normalization",
-    "recall": 0.7053,
-    "alertPrecision": 0.1537,
-    "f1": 0.2524,
-    "detected": 67
+    "recall": 0.7579,
+    "alertPrecision": 0.2416,
+    "f1": 0.3665,
+    "detected": 72
    },
    {
     "id": "engine",
     "label": "+ Sigma modifiers per spec (cidr, windash…)",
-    "recall": 0.7053,
-    "alertPrecision": 0.1815,
-    "f1": 0.2887,
-    "detected": 67
+    "recall": 0.7579,
+    "alertPrecision": 0.2564,
+    "f1": 0.3831,
+    "detected": 72
    }
   ],
   "operatingPoints": [
    {
     "level": "informational",
-    "recall": 0.7053,
-    "alertPrecision": 0.1815,
-    "f1": 0.2887,
-    "detected": 67
+    "recall": 0.7579,
+    "alertPrecision": 0.2564,
+    "f1": 0.3831,
+    "detected": 72
    },
    {
     "level": "low",
-    "recall": 0.7053,
-    "alertPrecision": 0.2538,
-    "f1": 0.3732,
-    "detected": 67
+    "recall": 0.7579,
+    "alertPrecision": 0.2833,
+    "f1": 0.4125,
+    "detected": 72
    },
    {
     "level": "medium",
-    "recall": 0.6947,
-    "alertPrecision": 0.2944,
-    "f1": 0.4136,
-    "detected": 66
+    "recall": 0.7053,
+    "alertPrecision": 0.6118,
+    "f1": 0.6552,
+    "detected": 67
    },
    {
     "level": "high",
     "recall": 0.5053,
-    "alertPrecision": 0.3114,
-    "f1": 0.3854,
+    "alertPrecision": 0.3111,
+    "f1": 0.3851,
     "detected": 48
    },
    {
@@ -168,9 +168,9 @@ export const COVERAGE_DATA = Object.freeze({
  ],
  "source": "ATT&CK v20.1 · Atomic Red Team · SigmaHQ · OTRF Security-Datasets",
  "generatedFrom": {
-  "coverage": "2026-11-27T02:07:36.917Z",
+  "coverage": "2026-11-27T23:54:34.703Z",
   "detection": "2026-11-25T23:55:25.924Z",
-  "telemetry": "2026-11-27T02:06:03.037Z"
+  "telemetry": "2026-11-27T23:54:00.077Z"
  },
  "matrix": [
   {
