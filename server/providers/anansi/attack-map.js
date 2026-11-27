@@ -57,6 +57,7 @@ import {
   normalizeVirusTotalIp,
 } from './attack-sources.js';
 import { enrichHijacksWithRipe } from './ripestat.js';
+import { parseWatchConfig, crtShUrl, parseCrtShResults, extractLookalikes, mergeFindings, buildCertWatchAlerts } from './cert-transparency.js';
 import { createIpGeo } from './ip-geo.js';
 import { resolve4 as dnsResolve4 } from 'node:dns/promises';
 import {
@@ -112,6 +113,7 @@ const SOURCE_TTL = Object.freeze({
   kev: 6 * 60 * MIN,
   fortiguard: 60 * MIN,
   bgp: 30 * MIN,
+  certs: 20 * MIN, // one watched brand per refresh; crt.sh is slow + keyless
   malwarebazaar: 60 * MIN,
   sslbl: 6 * 60 * MIN,
   hibp: 6 * 60 * MIN,
@@ -553,6 +555,8 @@ export function createAttackMapService({
   const idbCache = new Map(); // ip -> { at, info } (Shodan InternetDB)
   const vtCache = new Map(); // ip -> { at, info } (VirusTotal reputation)
   const ripeCache = new Map(); // "rpki:asn:prefix" | "holder:asn" -> { at, value } (RIPEstat)
+  const certStore = []; // accumulating CT lookalike findings, newest first
+  let certTermIdx = 0; // which watched brand to query this refresh (rotates)
   const sources = new Map(); // id -> { at, ok, status, value, error }
   let snapshot = null; // { at, body }
   let inflight = null;
@@ -886,6 +890,26 @@ export function createAttackMapService({
         leaks: l.status === 'fulfilled' ? normalizeBgpLeaks(l.value) : [],
       };
     },
+    // Certificate Transparency lookalike watch (keyless, crt.sh). crt.sh is slow
+    // and flaky, so query ONE watched brand per refresh and accumulate findings
+    // across refreshes; a crt.sh failure keeps the prior findings, never throws.
+    certs: async () => {
+      const watch = parseWatchConfig(env('CT_WATCH'));
+      if (!watch.length) return certStore.slice();
+      const item = watch[certTermIdx % watch.length];
+      certTermIdx += 1;
+      try {
+        const res = await fetchImpl(crtShUrl(item.label), {
+          headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
+          signal: AbortSignal.timeout(18_000),
+        });
+        if (res.ok) {
+          const found = extractLookalikes(parseCrtShResults(await res.json()), item);
+          mergeFindings(certStore, found, { now: clock });
+        }
+      } catch { /* crt.sh slow/down — keep what we have */ }
+      return certStore.slice();
+    },
     malwarebazaar: async () => {
       const key = env('ABUSECH_AUTH_KEY');
       if (!key) return KEY_REQUIRED;
@@ -1095,6 +1119,7 @@ export function createAttackMapService({
         phish,
         c2intel: val('c2intel') || [],
         malpedia,
+        certWatch: val('certs') || [],
       }),
       abuseipdb: abuse?.status || 'off',
       feeds: [
@@ -1145,6 +1170,7 @@ const FEED_LABELS = Object.freeze({
   kev: 'CISA KEV',
   fortiguard: 'FortiGuard',
   bgp: 'Cloudflare Radar BGP (route hijacks & leaks) · RIPEstat RPKI validation',
+  certs: 'crt.sh Certificate Transparency (lookalike-domain watch)',
   malwarebazaar: 'abuse.ch MalwareBazaar',
   sslbl: 'abuse.ch SSLBL',
   hibp: 'Have I Been Pwned (breaches)',
@@ -1183,8 +1209,10 @@ function epssDetail(epss, cve) {
 export function buildAlerts({
   fortiguard = [], otx = [], kev = [], urlhaus = null, iocs = [], epss = new Map(),
   hijacks = [], leaks = [], malwarebazaar = null, breaches = [], pocs = [], ics = [], phish = null, c2intel = [], malpedia = null,
+  certWatch = [],
 } = {}) {
   const lanes = [];
+  lanes.push(buildCertWatchAlerts(certWatch));
   lanes.push(
     fortiguard.map((a) => {
       const kind = FORTIGUARD_KINDS[a.source] || FORTIGUARD_KINDS['Threat Signal'];
