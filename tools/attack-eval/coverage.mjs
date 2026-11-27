@@ -21,6 +21,7 @@
  *   --layer  write an ATT&CK Navigator layer JSON
  */
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 
@@ -110,9 +111,22 @@ function coverageOf(ids, ent) {
   return { ids: [...ids].sort(), valid, unknown, parents, tactics };
 }
 
+/** ATT&CK release from the mitre-cti checkout's git tag (e.g. "ATT&CK-v20.1" → "20.1"),
+ *  for bundles that carry no x-mitre-collection object. null if not a git checkout. */
+export function attackVersionFromTag(tag) {
+  const m = /ATT&CK-v(\d+(?:\.\d+)*)/i.exec(String(tag || ''));
+  return m ? m[1] : null;
+}
+
 function main() {
   const stix = join(DATA, 'mitre-cti', 'enterprise-attack', 'enterprise-attack.json');
   const ent = loadEnterprise(stix);
+  if (!ent.version) {
+    try {
+      const tag = execFileSync('git', ['-C', join(DATA, 'mitre-cti'), 'describe', '--tags'], { encoding: 'utf8' }).trim();
+      ent.version = attackVersionFromTag(tag);
+    } catch { /* not a git checkout — version stays unknown, reported as such */ }
+  }
   const allParents = [...ent.techniques.values()].filter((t) => !t.isSub);
   const allSubs = [...ent.techniques.values()].filter((t) => t.isSub);
 

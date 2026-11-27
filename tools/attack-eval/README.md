@@ -68,26 +68,69 @@ ATT&CK Enterprise universe: **227 techniques, 479 sub-techniques, 15 tactics.**
 
 ### Real-telemetry detection (multi-sensor) — `telemetry-eval.mjs`
 
-The command corpus is one sensor. This judge replays the **full multi-sensor
-Sigma corpus** (2,189 rules across 33 log sources: process_creation, registry,
-network, image_load, create_remote_thread, process_access, dns, pipe, ps_script,
-ps_module…) over **real labeled Windows telemetry** — 96 OTRF Security-Datasets
-(Mordor) captures, each Sysmon/PowerShell trace labeled with the ATT&CK technique
-it ran. This is how a detection team actually measures coverage.
+The command corpus is one sensor. This judge replays the **full Sigma corpus**
+(2,477 ATT&CK-tagged rules across 60 log sources, routed by Sigma's own
+logsource taxonomy) over **real labeled Windows telemetry** — 95 OTRF
+Security-Datasets (Mordor) captures, 635k events of Sysmon, Security, PowerShell
+and other channels, each labeled with the ATT&CK technique it ran.
 
-| Metric | Value |
-| --- | --- |
-| **dataset detection recall** | **57.9%** (55 / 95 captures detected) |
-| technique breadth | 64.5% (20 / 31 labeled techniques caught) |
-| alert precision (coarse) | 23.8% |
-| sensors contributing | process_creation · create_remote_thread · ps_module · registry · network · process_access |
+**Ablation** — one fix at a time, same 95 captures, same judge. The baseline row
+reproduces the previously published numbers exactly, so the comparison is fair.
 
-Moving from a single-sensor command corpus to multi-sensor real telemetry **more
-than doubled detection** (≈25% → 57.9%), and every sensor carries weight. Judge
-(detection recall ≥ 0.80): **BELOW BAR at 0.579, reported honestly**. The eval
-prints the exact gap — the 11 undetected techniques (T1012, T1049, T1056, T1110,
-T1123, T1135, T1210, T1222, T1550, T1558, and T1562, which ATT&CK v20.1 retired)
-— so closing it is a concrete to-do list, not a mystery.
+| config | recall | alert-P | F1 | captures |
+| --- | --- | --- | --- | --- |
+| baseline (as first shipped) | 57.9% | 23.8% | 33.7% | 55/95 |
+| + Sigma-spec Sysmon EventID map | 57.9% | 23.8% | 33.7% | 55/95 |
+| + `service:` rules (Security, System, Defender…) | 66.3% | 13.1% | 21.9% | 63/95 |
+| + classic PowerShell 400/600/800 | 66.3% | 13.1% | 21.9% | 63/95 |
+| + MITRE revoked-by id normalization | 70.5% | 15.4% | 25.2% | 67/95 |
+| **+ Sigma modifiers per spec (cidr, windash…)** | **70.5%** | **18.2%** | **28.9%** | **67/95** |
+
+What each fix was, found by triaging misses in the raw data, not by tuning:
+
+1. **288 rules were silently dropped.** The loader kept only rules with a
+   `logsource.category`; Sigma's `product: windows` + `service:` rules (141
+   Security, 55 System…) were never loaded, and 127k Security events were never
+   scored. DCSync (T1003.006, Security 4662), pass-the-hash and SMB lateral
+   movement are only visible there. Routing now comes from pySigma's own
+   service→channel and Sysmon EventID tables (`windows-logsource-map.json`).
+2. **Ground truth used retired ATT&CK ids.** OTRF labels predate ATT&CK v20.1,
+   which revoked T1562 (→ T1685, and T1562.004 → T1686 at sub-technique level).
+   Labels and fired tags are both resolved through MITRE's STIX `revoked-by`
+   relationships (full id first) — MITRE's identity map, not a fuzzy one. The
+   un-normalized ("raw ids") numbers are written alongside: 66.3 / 15.4 / 25.0%.
+3. **113 rules used modifiers the engine mis-evaluated.** Unknown modifiers fell
+   back to plain equals, so `IpAddress|cidr: 10.0.0.0/8` never matched and a
+   "logon **from a public IP**" rule fired on every private-network logon. The
+   spec engine implements `cidr`, `windash`, `base64offset`, `base64`,
+   `fieldref`, `exists`, `gt/gte/lt/lte` and case-sensitive `re` with `i/m/s`;
+   `windash` and `base64offset` are byte-identical to pySigma on every value in
+   the SigmaHQ corpus (131/131, 33/33; golden fixtures in `pysigma-golden.json`).
+   A rule using a modifier neither engine implements is **skipped and counted**,
+   never guessed. Two fixes (spec Sysmon map, classic PowerShell) moved nothing —
+   kept in the table, not hidden.
+
+**Correction worth knowing:** technique breadth went *down* by one (26 → 25 of
+32) with the spec engine — T1110 had only counted as "detected" because a
+T1110-tagged public-IP rule fired *falsely* on private logons. The number got
+more honest, not worse. Zero captures were lost vs. the baseline.
+
+**Operating points** — the final detector alerting only on rules at or above
+each Sigma `level`. All five are reported; none was picked after the fact.
+
+| alert on level ≥ | recall | alert-P | F1 |
+| --- | --- | --- | --- |
+| informational (all rules) | 70.5% | 18.2% | 28.9% |
+| low | 70.5% | 25.4% | 37.3% |
+| medium | 69.5% | 29.4% | 41.4% |
+| high | 50.5% | 31.1% | 38.5% |
+| critical | 6.3% | 70.6% | 11.6% |
+
+At `low` and `medium`, the detector now beats the shipped baseline on **both**
+recall and precision. Judge (detection recall ≥ 0.80): **BELOW BAR at 0.705,
+reported honestly.** Still undetected: T1012, T1049, T1056, T1110, T1135, T1210,
+T1222 — mostly discovery commands and SMB/lateral-movement captures where the
+only rule that fires is the informational `User Logoff` (T1531).
 
 ### Command-corpus judge: F1 ≥ 0.80 → **BELOW BAR, reported honestly**
 
@@ -125,7 +168,15 @@ node tools/attack-eval/sigma-eval.mjs      --json tools/attack-eval/results-dete
 node tools/attack-eval/telemetry-eval.mjs  --json tools/attack-eval/results-telemetry.json
 node tools/attack-eval/coverage.mjs        --json tools/attack-eval/results-coverage.json \
      --layer tools/attack-eval/fangs-attack-layer.json
+# 3. regenerate the app's coverage data from those results (never hand-edit it)
+node tools/attack-eval/snapshot.mjs        # → src/anansi/coverageData.generated.js
 ```
+
+`src/anansi/coverageBoard.test.mjs` fails if `coverageData.generated.js` and the
+result files ever disagree. `windows-logsource-map.json` and
+`pysigma-golden.json` are generated with pySigma (`pip install
+pysigma-pipeline-windows pysigma-pipeline-sysmon`); each file names its source
+versions.
 
 `fangs-attack-layer.json` imports into the [ATT&CK Navigator](https://mitre-attack.github.io/attack-navigator/)
 (active = red, explains = gold, Sigma detection = blue).
@@ -141,8 +192,12 @@ inline fixtures, so it runs in CI with no dataset clones. It runs under
 
 - Every F.A.N.G.S technique is validated against the live STIX matrix; revoked
   IDs are surfaced, never silently counted.
-- The Sigma engine is a pragmatic subset of the spec (documented in
-  `sigma-engine.mjs`); unknown event fields are treated as absent, which is
-  conservative (a filter on a field we don't carry can't suppress a detection).
+- The Sigma engine has two modes (`sigma-engine.mjs`): the **legacy** engine every
+  older number was measured with (kept so those numbers reproduce), and the
+  **spec** engine, verified against pySigma, used for the final real-telemetry
+  row. Unknown event fields are treated as absent, which is conservative (a filter
+  on a field we don't carry can't suppress a detection).
+- Nothing in the ablation is tuned on the captures: every fix is a spec or
+  identity correction, and the Sigma-level operating points are all reported.
 - Numbers above are reproducible from the pinned public datasets; re-running on a
   newer ATT&CK / Atomic / Sigma snapshot will move them, by design.

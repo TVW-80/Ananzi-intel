@@ -1,0 +1,137 @@
+{
+ "source": "Expected expansions produced by pySigma 2.1.2 (sigma.rule.SigmaRule modifiers) for values taken from the SigmaHQ rule corpus. Regenerate per tools/attack-eval/README.",
+ "windash": {
+  " -a ": [
+   " -a ",
+   " /a ",
+   " –a ",
+   " —a ",
+   " ―a "
+  ],
+  " -f ": [
+   " -f ",
+   " /f ",
+   " –f ",
+   " —f ",
+   " ―f "
+  ],
+  " -ma ": [
+   " -ma ",
+   " /ma ",
+   " –ma ",
+   " —ma ",
+   " ―ma "
+  ],
+  " -s -i pwsh": [
+   " -s -i pwsh",
+   " -s /i pwsh",
+   " -s –i pwsh",
+   " -s —i pwsh",
+   " -s ―i pwsh",
+   " /s -i pwsh",
+   " /s /i pwsh",
+   " /s –i pwsh",
+   " /s —i pwsh",
+   " /s ―i pwsh",
+   " –s -i pwsh",
+   " –s /i pwsh",
+   " –s –i pwsh",
+   " –s —i pwsh",
+   " –s ―i pwsh",
+   " —s -i pwsh",
+   " —s /i pwsh",
+   " —s –i pwsh",
+   " —s —i pwsh",
+   " —s ―i pwsh",
+   " ―s -i pwsh",
+   " ―s /i pwsh",
+   " ―s –i pwsh",
+   " ―s —i pwsh",
+   " ―s ―i pwsh"
+  ],
+  " /end ": [
+   " -end ",
+   " /end ",
+   " –end ",
+   " —end ",
+   " ―end "
+  ],
+  " /sc ": [
+   " -sc ",
+   " /sc ",
+   " –sc ",
+   " —sc ",
+   " ―sc "
+  ],
+  "-decodehex ": [
+   "-decodehex ",
+   "/decodehex ",
+   "–decodehex ",
+   "—decodehex ",
+   "―decodehex "
+  ],
+  "-q": [
+   "-q",
+   "/q",
+   "–q",
+   "—q",
+   "―q"
+  ],
+  "/delete": [
+   "-delete",
+   "/delete",
+   "–delete",
+   "—delete",
+   "―delete"
+  ],
+  "/remote:": [
+   "-remote:",
+   "/remote:",
+   "–remote:",
+   "—remote:",
+   "―remote:"
+  ]
+ },
+ "base64offset": {
+  "::FromBase64String": [
+   "6OkZyb21CYXNlNjRTdHJpbm",
+   "OjpGcm9tQmFzZTY0U3RyaW5n",
+   "o6RnJvbUJhc2U2NFN0cmluZ"
+  ],
+  "DisableArchiveScanning ": [
+   "EaXNhYmxlQXJjaGl2ZVNjYW5uaW5nI",
+   "RGlzYWJsZUFyY2hpdmVTY2FubmluZy",
+   "Rpc2FibGVBcmNoaXZlU2Nhbm5pbmcg"
+  ],
+  "DisableBlockAtFirstSeen ": [
+   "EaXNhYmxlQmxvY2tBdEZpcnN0U2Vlbi",
+   "RGlzYWJsZUJsb2NrQXRGaXJzdFNlZW4g",
+   "Rpc2FibGVCbG9ja0F0Rmlyc3RTZWVuI"
+  ],
+  "DisableCatchupQuickScan ": [
+   "EaXNhYmxlQ2F0Y2h1cFF1aWNrU2Nhbi",
+   "RGlzYWJsZUNhdGNodXBRdWlja1NjYW4g",
+   "Rpc2FibGVDYXRjaHVwUXVpY2tTY2FuI"
+  ],
+  "DisableRealtimeMonitoring ": [
+   "EaXNhYmxlUmVhbHRpbWVNb25pdG9yaW5nI",
+   "RGlzYWJsZVJlYWx0aW1lTW9uaXRvcmluZy",
+   "Rpc2FibGVSZWFsdGltZU1vbml0b3Jpbmcg"
+  ],
+  "IEX (New": [
+   "JRVggKE5ld",
+   "SUVYIChOZX",
+   "lFWCAoTmV3"
+  ],
+  "iex([": [
+   "aWV4KF",
+   "lleChb",
+   "pZXgoW"
+  ],
+  "set-mppreference ": [
+   "NldC1tcHByZWZlcmVuY2Ug",
+   "c2V0LW1wcHJlZmVyZW5jZS",
+   "zZXQtbXBwcmVmZXJlbmNlI"
+  ]
+ }
+}

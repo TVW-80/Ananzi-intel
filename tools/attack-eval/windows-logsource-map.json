@@ -1,0 +1,143 @@
+{
+  "source": "Generated from pySigma (pysigma-pipeline-windows 3.0.0, pysigma-pipeline-sysmon 3.0.0, pysigma 2.1.2). Do not edit by hand; regenerate with tools/attack-eval/README.",
+  "services": {
+    "security": "Security",
+    "application": "Application",
+    "system": "System",
+    "sysmon": "Microsoft-Windows-Sysmon/Operational",
+    "powershell": [
+      "Microsoft-Windows-PowerShell/Operational",
+      "PowerShellCore/Operational"
+    ],
+    "powershell-classic": "Windows PowerShell",
+    "taskscheduler": "Microsoft-Windows-TaskScheduler/Operational",
+    "wmi": "Microsoft-Windows-WMI-Activity/Operational",
+    "dns-server": "DNS Server",
+    "dns-server-audit": "Microsoft-Windows-DNS-Server/Audit",
+    "dns-server-analytic": "Microsoft-Windows-DNS-Server/Analytical",
+    "driver-framework": "Microsoft-Windows-DriverFrameworks-UserMode/Operational",
+    "ntlm": "Microsoft-Windows-NTLM/Operational",
+    "adfs": "AD FS/Admin",
+    "dhcp": "Microsoft-Windows-DHCP-Server/Operational",
+    "msexchange-management": "MSExchange Management",
+    "applocker": [
+      "Microsoft-Windows-AppLocker/MSI and Script",
+      "Microsoft-Windows-AppLocker/EXE and DLL",
+      "Microsoft-Windows-AppLocker/Packaged app-Deployment",
+      "Microsoft-Windows-AppLocker/Packaged app-Execution"
+    ],
+    "printservice-admin": "Microsoft-Windows-PrintService/Admin",
+    "printservice-operational": "Microsoft-Windows-PrintService/Operational",
+    "codeintegrity-operational": "Microsoft-Windows-CodeIntegrity/Operational",
+    "smbclient-security": "Microsoft-Windows-SmbClient/Security",
+    "firewall-as": "Microsoft-Windows-Windows Firewall With Advanced Security/Firewall",
+    "bits-client": "Microsoft-Windows-Bits-Client/Operational",
+    "windefend": "Microsoft-Windows-Windows Defender/Operational",
+    "terminalservices-localsessionmanager": "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational",
+    "servicebus-client": [
+      "Microsoft-ServiceBus-Client/Operational",
+      "Microsoft-ServiceBus-Client/Admin"
+    ],
+    "microsoft-servicebus-client": [
+      "Microsoft-ServiceBus-Client/Operational",
+      "Microsoft-ServiceBus-Client/Admin"
+    ],
+    "ldap": "Microsoft-Windows-LDAP-Client/Debug",
+    "ldap_debug": "Microsoft-Windows-LDAP-Client/Debug",
+    "security-mitigations": [
+      "Microsoft-Windows-Security-Mitigations/Kernel Mode",
+      "Microsoft-Windows-Security-Mitigations/User Mode"
+    ],
+    "diagnosis-scripted": "Microsoft-Windows-Diagnosis-Scripted/Operational",
+    "shell-core": "Microsoft-Windows-Shell-Core/Operational",
+    "openssh": "OpenSSH/Operational",
+    "bitlocker": "Microsoft-Windows-BitLocker/BitLocker Management",
+    "vhdmp": "Microsoft-Windows-VHDMP/Operational",
+    "appxdeployment-server": "Microsoft-Windows-AppXDeploymentServer/Operational",
+    "lsa-server": "Microsoft-Windows-LSA/Operational",
+    "appxpackaging-om": "Microsoft-Windows-AppxPackaging/Operational",
+    "dns-client": "Microsoft-Windows-DNS Client Events/Operational",
+    "appmodel-runtime": "Microsoft-Windows-AppModel-Runtime/Admin",
+    "capi2": "Microsoft-Windows-CAPI2/Operational",
+    "certificateservicesclient-lifecycle-system": "Microsoft-Windows-CertificateServicesClient-Lifecycle-System/Operational",
+    "application-experience": [
+      "Microsoft-Windows-Application-Experience/Program-Telemetry",
+      "Microsoft-Windows-Application-Experience/Program-Compatibility-Assistant"
+    ],
+    "hyper-v-worker": "Microsoft-Windows-Hyper-V-Worker",
+    "iis-configuration": "Microsoft-IIS-Configuration/Operational",
+    "kernel-event-tracing": "Microsoft-Windows-Kernel-EventTracing",
+    "kernel-shimengine": [
+      "Microsoft-Windows-Kernel-ShimEngine/Operational",
+      "Microsoft-Windows-Kernel-ShimEngine/Diagnostic"
+    ],
+    "ntfs": "Microsoft-Windows-Ntfs/Operational",
+    "sense": "Microsoft-Windows-SENSE/Operational"
+  },
+  "genericCategories": {
+    "ps_module": {
+      "service": "powershell",
+      "EventID": 4103
+    },
+    "ps_script": {
+      "service": "powershell",
+      "EventID": 4104
+    },
+    "ps_classic_start": {
+      "service": "powershell-classic",
+      "EventID": 400
+    },
+    "ps_classic_provider_start": {
+      "service": "powershell-classic",
+      "EventID": 600
+    },
+    "ps_classic_script": {
+      "service": "powershell-classic",
+      "EventID": 800
+    }
+  },
+  "sysmonCategoryEventIds": {
+    "process_creation": 1,
+    "file_change": 2,
+    "network_connection": 3,
+    "sysmon_status": [
+      4,
+      16
+    ],
+    "process_termination": 5,
+    "driver_load": 6,
+    "image_load": 7,
+    "create_remote_thread": 8,
+    "raw_access_thread": 9,
+    "process_access": 10,
+    "file_event": 11,
+    "registry_add": 12,
+    "registry_delete": 12,
+    "registry_set": 13,
+    "registry_rename": 14,
+    "registry_event": [
+      12,
+      13,
+      14
+    ],
+    "create_stream_hash": 15,
+    "pipe_created": [
+      17,
+      18
+    ],
+    "wmi_event": [
+      19,
+      20,
+      21
+    ],
+    "dns_query": 22,
+    "file_delete": 23,
+    "clipboard_capture": 24,
+    "process_tampering": 25,
+    "file_delete_detected": 26,
+    "file_block_executable": 27,
+    "file_block_shredding": 28,
+    "file_executable_detected": 29,
+    "sysmon_error": 255
+  }
+}
