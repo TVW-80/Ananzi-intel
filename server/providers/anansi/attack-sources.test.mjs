@@ -146,7 +146,29 @@ test('buildAttackerIps merges + dedupes feeds, ranks by corroboration, caps', ()
   assert.deepEqual(buildAttackerIps({}), []);
 });
 
-import { normalizeVirusTotalIp } from './attack-sources.js';
+import { normalizeVirusTotalIp, normalizeCrowdsec } from './attack-sources.js';
+
+test('CrowdSec CTI smoke → behavior-labeled reputation; bad payloads → null', () => {
+  const cs = normalizeCrowdsec({
+    reputation: 'malicious', confidence: 'high', as_name: 'EVIL-AS',
+    location: { country: 'ru' },
+    behaviors: [{ name: 'http:scan', label: 'HTTP Scan' }, { name: 'ssh:bruteforce', label: 'SSH Bruteforce' }],
+    classifications: { classifications: [{ name: 'community-blocklist', label: 'CrowdSec Community Blocklist' }], false_positives: [] },
+    history: { last_seen: '2026-11-27T00:00:00Z' },
+    scores: { overall: { aggressiveness: 5 } },
+  });
+  assert.equal(cs.reputation, 'malicious');
+  assert.equal(cs.confidence, 'high');
+  assert.deepEqual(cs.behaviors, ['HTTP Scan', 'SSH Bruteforce']);
+  assert.deepEqual(cs.classifications, ['CrowdSec Community Blocklist']);
+  assert.equal(cs.falsePositive, false);
+  assert.equal(cs.country, 'RU');
+  assert.equal(cs.lastSeen, '2026-11-27T00:00:00Z');
+  // false-positive flag surfaces honestly
+  assert.equal(normalizeCrowdsec({ reputation: 'suspicious', classifications: { false_positives: [{ name: 'seo' }] } }).falsePositive, true);
+  assert.equal(normalizeCrowdsec(null), null);
+  assert.equal(normalizeCrowdsec('nope'), null);
+});
 
 test('VirusTotal v3 IP report → compact reputation; bad payloads → null', () => {
   const vt = normalizeVirusTotalIp({

@@ -188,6 +188,16 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'free',
   }),
   Object.freeze({
+    id: 'crowdsec',
+    title: 'CROWDSEC CTI', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Attack Map IP reputation from the CrowdSec community: what its sensors have actually seen an address DO (scanning, brute force, exploit attempts), with a confidence level. Free CTI key.',
+    ),
+    getUrl: 'https://app.crowdsec.net/',
+    envVars: Object.freeze(['CROWDSEC_API_KEY']),
+    tier: 'free',
+  }),
+  Object.freeze({
     id: 'greynoise',
     title: 'GREYNOISE', // i18n-ignore: provider product name
     unlocks: msg(

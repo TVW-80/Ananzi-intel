@@ -55,6 +55,7 @@ import {
   parseFeodoIps,
   buildAttackerIps,
   normalizeVirusTotalIp,
+  normalizeCrowdsec,
 } from './attack-sources.js';
 import { enrichHijacksWithRipe } from './ripestat.js';
 import { parseWatchConfig, crtShUrl, parseCrtShResults, extractLookalikes, mergeFindings, buildCertWatchAlerts } from './cert-transparency.js';
@@ -101,6 +102,8 @@ const GREYNOISE_TTL = 7 * 24 * 60 * MIN;
 const GREYNOISE_PER_REFRESH = 5;
 const VT_TTL = 24 * 60 * MIN;
 const VT_PER_REFRESH = 4; // VirusTotal free public key: 4 lookups/minute
+const CROWDSEC_TTL = 24 * 60 * MIN;
+const CROWDSEC_PER_REFRESH = 5; // CrowdSec CTI free tier is daily-quota limited
 
 /** Per-source refresh intervals. */
 const SOURCE_TTL = Object.freeze({
@@ -389,6 +392,18 @@ export function describeIp(ip) {
       tech: `VirusTotal last_analysis_stats: ${vt.malicious} malicious, ${vt.suspicious} suspicious${vt.asOwner ? ` · ${vt.asOwner}` : ''}.`,
     });
   }
+  // CrowdSec CTI: the crowd's behavior-labeled verdict on this address.
+  const cs = ip.crowdsec;
+  if (cs && cs.reputation && cs.reputation !== 'unknown') {
+    const bits = [cs.behaviors[0], cs.classifications[0]].filter(Boolean).join(', ');
+    lines.push({
+      text: `↳ CrowdSec: ${cs.reputation}${cs.confidence ? ` (${cs.confidence} confidence)` : ''}`,
+      plain: cs.falsePositive
+        ? 'CrowdSec’s community flags this, but also notes it can be a false positive (e.g. a shared scanner).'
+        : `The CrowdSec community reports this address as ${cs.reputation}${bits ? `, seen: ${bits}` : ''}.`,
+      tech: `CrowdSec CTI reputation=${cs.reputation}${cs.behaviors.length ? ` · behaviors: ${cs.behaviors.join(', ')}` : ''}${cs.classifications.length ? ` · ${cs.classifications.join(', ')}` : ''}${cs.lastSeen ? ` · last seen ${cs.lastSeen}` : ''}.`,
+    });
+  }
   // Shodan InternetDB (free, keyless): what the attacker's own box looks like.
   const idb = ip.internetdb;
   if (idb) {
@@ -572,6 +587,7 @@ export function createAttackMapService({
   const gnBudget = { day: '', used: 0 };
   const idbCache = new Map(); // ip -> { at, info } (Shodan InternetDB)
   const vtCache = new Map(); // ip -> { at, info } (VirusTotal reputation)
+  const csCache = new Map(); // ip -> { at, info } (CrowdSec CTI reputation)
   const ripeCache = new Map(); // "rpki:asn:prefix" | "holder:asn" -> { at, value } (RIPEstat)
   const certStore = []; // accumulating CT lookalike findings, newest first
   let certTermIdx = 0; // which watched brand to query this refresh (rotates)
@@ -770,6 +786,38 @@ export function createAttackMapService({
         if (info) ip.virustotal = info;
       } catch (err) {
         errors.push(`VirusTotal: ${err.message}`);
+        status = 'error';
+        break;
+      }
+    }
+    return status;
+  }
+
+  /** CrowdSec CTI: crowd-sourced, behavior-labeled reputation for the busiest IPs. */
+  async function crowdsec(ips, errors) {
+    const key = env('CROWDSEC_API_KEY');
+    if (!key) return 'key-required';
+    let asked = 0;
+    let status = 'ok';
+    for (const ip of ips) {
+      const hit = csCache.get(ip.ip);
+      if (hit && clock() - hit.at < CROWDSEC_TTL) {
+        if (hit.info) ip.crowdsec = hit.info;
+        continue;
+      }
+      if (asked >= CROWDSEC_PER_REFRESH) continue;
+      asked += 1;
+      try {
+        const res = await request(URLS.crowdsec(ip.ip), { headers: { 'x-api-key': key, Accept: 'application/json' } });
+        if (res.status === 404) { csCache.set(ip.ip, { at: clock(), info: null }); continue; } // unknown to CrowdSec — a real answer
+        if (res.status === 429) { errors.push('CrowdSec: rate limited'); try { await res.body?.cancel(); } catch { /* no-op */ } break; }
+        if (res.status === 401 || res.status === 403) { errors.push(`CrowdSec: HTTP ${res.status} (check the key)`); status = 'error'; break; }
+        if (!res.ok) { errors.push(`CrowdSec: HTTP ${res.status}`); status = 'error'; break; }
+        const info = normalizeCrowdsec(JSON.parse((await res.text()) || '{}'));
+        csCache.set(ip.ip, { at: clock(), info });
+        if (info) ip.crowdsec = info;
+      } catch (err) {
+        errors.push(`CrowdSec: ${err.message}`);
         status = 'error';
         break;
       }
@@ -1068,6 +1116,7 @@ export function createAttackMapService({
     await internetDb(bySize.slice(0, INTERNETDB_PER_REFRESH), errors);
     // VirusTotal reputation (key-gated): the busiest handful, respecting 4/min.
     const vtStatus = await virusTotal(bySize.slice(0, 8), errors);
+    const csStatus = await crowdsec(bySize.slice(0, 8), errors);
 
     const abusePoints = abuse && (abuse.status === 'ok' || abuse.status === 'stale') ? abuse.points || [] : [];
     const rows = buildSources(dsh.ips, abusePoints, blocklistIps);
@@ -1157,6 +1206,7 @@ export function createAttackMapService({
         { id: 'greynoise', label: env('GREYNOISE_API_KEY') ? 'GreyNoise' : 'GreyNoise (no key, smaller daily allowance)', status: gnStatus, keyEnv: 'GREYNOISE_API_KEY' },
         { id: 'internetdb', label: 'Shodan InternetDB (keyless)', status: errors.some((e) => e.startsWith('InternetDB')) ? 'error' : 'ok' },
         { id: 'virustotal', label: env('VIRUSTOTAL_API_KEY') ? 'VirusTotal (IP reputation)' : 'VirusTotal (add VIRUSTOTAL_API_KEY)', status: vtStatus, keyEnv: 'VIRUSTOTAL_API_KEY' },
+        { id: 'crowdsec', label: env('CROWDSEC_API_KEY') ? 'CrowdSec CTI (crowd IP reputation)' : 'CrowdSec CTI (add CROWDSEC_API_KEY)', status: csStatus, keyEnv: 'CROWDSEC_API_KEY' },
       ],
       errors,
     };

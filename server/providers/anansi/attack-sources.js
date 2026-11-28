@@ -16,6 +16,7 @@ export const URLS = Object.freeze({
   radar: 'https://api.cloudflare.com/client/v4/radar/attacks',
   blocklist: (service) => `https://lists.blocklist.de/lists/${service}.txt`,
   greynoise: (ip) => `https://api.greynoise.io/v3/community/${ip}`,
+  crowdsec: (ip) => `https://cti.api.crowdsec.net/v2/smoke/${ip}`,
   // High-volume attacker-IP lists for the worldwide scatter (all keyless).
   cins: 'https://cinsscore.com/list/ci-badguys.txt',
   etCompromised: 'https://rules.emergingthreats.net/blockrules/compromised-ips.txt',
@@ -187,6 +188,33 @@ export function buildAttackerIps(feeds = {}, { limit = 800 } = {}) {
  * VirusTotal v3 IP-address report → a compact reputation summary. Pure.
  * @returns {{malicious, suspicious, harmless, undetected, total, reputation, asOwner, country}|null}
  */
+/**
+ * CrowdSec CTI "smoke" response → compact IP reputation. CrowdSec is a crowd-
+ * sourced network: its verdict comes from what its community of sensors has
+ * actually seen this IP DO (behaviors), not just a static list. Shape per the
+ * CTI API docs: { reputation, confidence, as_name, location.country,
+ * behaviors[], classifications.classifications[], history.last_seen, scores }.
+ */
+export function normalizeCrowdsec(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  const labels = (arr) => (Array.isArray(arr) ? arr.map((b) => str(b?.label || b?.name)).filter(Boolean) : []);
+  const reputation = str(payload.reputation).toLowerCase() || 'unknown';
+  const behaviors = labels(payload.behaviors).slice(0, 6);
+  const classifications = labels(payload.classifications?.classifications).slice(0, 4);
+  const falsePositive = (payload.classifications?.false_positives || []).length > 0;
+  return {
+    reputation, // malicious | suspicious | known | safe | unknown
+    confidence: str(payload.confidence).toLowerCase() || null,
+    behaviors,
+    classifications,
+    falsePositive,
+    asName: str(payload.as_name) || null,
+    country: str(payload.location?.country).toUpperCase().slice(0, 2) || null,
+    lastSeen: str(payload.history?.last_seen) || null,
+    aggressiveness: Number(payload.scores?.overall?.aggressiveness) || null,
+  };
+}
+
 export function normalizeVirusTotalIp(payload) {
   const a = payload?.data?.attributes;
   if (!a || typeof a !== 'object') return null;
