@@ -146,7 +146,23 @@ test('buildAttackerIps merges + dedupes feeds, ranks by corroboration, caps', ()
   assert.deepEqual(buildAttackerIps({}), []);
 });
 
-import { normalizeVirusTotalIp, normalizeCrowdsec } from './attack-sources.js';
+import { normalizeVirusTotalIp, normalizeCrowdsec, normalizeVulncheckKev } from './attack-sources.js';
+
+test('VulnCheck KEV index → recent exploited CVEs, newest first; bad rows dropped', () => {
+  const rows = normalizeVulncheckKev({ data: [
+    { cve: ['cve-2024-1111'], vulnerabilityName: 'RCE', vendorProject: 'Acme', product: 'Gateway', date_added: '2026-11-20T00:00:00Z', knownRansomwareCampaignUse: 'Known', vulncheck_reported_exploitation: [{ url: 'https://ref/1' }, { url: 'https://ref/2' }] },
+    { cve: ['CVE-2023-2222'], vulnerabilityName: 'Auth bypass', vendorProject: 'Globex', product: 'VPN', date_added: '2026-11-25', knownRansomwareCampaignUse: 'Unknown' },
+    { cve: ['not-a-cve'], date_added: '2026-11-27' }, // dropped
+  ] }, 10);
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].cve, 'CVE-2023-2222'); // newest date_added first
+  const acme = rows.find((r) => r.cve === 'CVE-2024-1111');
+  assert.equal(acme.ransomware, true);
+  assert.deepEqual(acme.reportedBy, ['https://ref/1', 'https://ref/2']);
+  assert.equal(acme.vendor, 'Acme');
+  assert.deepEqual(normalizeVulncheckKev({}), []);
+  assert.deepEqual(normalizeVulncheckKev(null), []);
+});
 
 test('CrowdSec CTI smoke → behavior-labeled reputation; bad payloads → null', () => {
   const cs = normalizeCrowdsec({

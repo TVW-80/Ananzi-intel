@@ -56,6 +56,7 @@ import {
   buildAttackerIps,
   normalizeVirusTotalIp,
   normalizeCrowdsec,
+  normalizeVulncheckKev,
 } from './attack-sources.js';
 import { enrichHijacksWithRipe } from './ripestat.js';
 import { parseWatchConfig, crtShUrl, parseCrtShResults, extractLookalikes, mergeFindings, buildCertWatchAlerts } from './cert-transparency.js';
@@ -70,6 +71,7 @@ import {
   familyExplained,
   greyNoiseExplained,
   kevExplained,
+  vulncheckExplained,
   portExplained,
   pulseExplained,
   techniqueExplained,
@@ -115,6 +117,7 @@ const SOURCE_TTL = Object.freeze({
   drop: 24 * 60 * MIN,
   tor: 6 * 60 * MIN,
   kev: 6 * 60 * MIN,
+  vulncheck: 6 * 60 * MIN,
   fortiguard: 60 * MIN,
   bgp: 30 * MIN,
   certs: 20 * MIN, // one watched brand per refresh; crt.sh is slow + keyless
@@ -926,6 +929,12 @@ export function createAttackMapService({
     },
     tor: async () => new Set(parseIpList(await getText(URLS.tor))),
     kev: async () => normalizeKev(await getJson(URLS.kev)),
+    // VulnCheck KEV: ~3× CISA's exploited-CVE set + exploitation sources/ransomware.
+    vulncheck: async () => {
+      const key = env('VULNCHECK_API_KEY');
+      if (!key) return KEY_REQUIRED;
+      return normalizeVulncheckKev(await getJson(URLS.vulncheckKev(), { headers: { Authorization: `Bearer ${key}`, Accept: 'application/json' } }));
+    },
     fortiguard: async () => {
       const items = [];
       const errs = [];
@@ -1150,7 +1159,8 @@ export function createAttackMapService({
     }));
     const pocs = val('poc') || [];
     const kev = val('kev') || [];
-    const epss = await epssFor([...kev.map((v) => v.cveID), ...pocs.map((p) => p.cve)], errors);
+    const vulncheck = val('vulncheck') || [];
+    const epss = await epssFor([...kev.map((v) => v.cveID), ...pocs.map((p) => p.cve), ...vulncheck.map((v) => v.cve)], errors);
     const dailyReports = dsh.ips.reduce((sum, ip) => sum + ip.reports, 0);
 
     const body = {
@@ -1196,6 +1206,7 @@ export function createAttackMapService({
         c2intel: val('c2intel') || [],
         malpedia,
         certWatch: val('certs') || [],
+        vulncheck,
       }),
       abuseipdb: abuse?.status || 'off',
       feeds: [
@@ -1245,6 +1256,7 @@ const FEED_LABELS = Object.freeze({
   drop: 'Spamhaus DROP',
   tor: 'Tor exit list',
   kev: 'CISA KEV',
+  vulncheck: 'VulnCheck KEV (expanded exploited CVEs)',
   fortiguard: 'FortiGuard',
   bgp: 'Cloudflare Radar BGP (route hijacks & leaks) · RIPEstat RPKI validation',
   certs: 'crt.sh Certificate Transparency (lookalike-domain watch)',
@@ -1264,6 +1276,7 @@ const FEED_LABELS = Object.freeze({
 });
 const FEED_KEYS = Object.freeze({
   radar: 'CLOUDFLARE_API_TOKEN',
+  vulncheck: 'VULNCHECK_API_KEY',
   threatfox: 'ABUSECH_AUTH_KEY',
   urlhaus: 'ABUSECH_AUTH_KEY',
   otx: 'OTX_API_KEY',
@@ -1286,10 +1299,22 @@ function epssDetail(epss, cve) {
 export function buildAlerts({
   fortiguard = [], otx = [], kev = [], urlhaus = null, iocs = [], epss = new Map(),
   hijacks = [], leaks = [], malwarebazaar = null, breaches = [], pocs = [], ics = [], phish = null, c2intel = [], malpedia = null,
-  certWatch = [],
+  certWatch = [], vulncheck = [],
 } = {}) {
   const lanes = [];
   lanes.push(buildCertWatchAlerts(certWatch));
+  // VulnCheck KEV: show its exploited CVEs, flagging the ones NOT yet on CISA's
+  // list (the early-warning delta) and dropping exact CISA-KEV dupes.
+  const cisaKev = new Set(kev.map((v) => str(v.cveID).toUpperCase()));
+  lanes.push(
+    vulncheck.slice(0, 6).map((v) => ({
+      source: 'VulnCheck KEV',
+      ...vulncheckExplained(v, cisaKev.has(v.cve)),
+      link: `https://nvd.nist.gov/vuln/detail/${encodeURIComponent(v.cve)}`,
+      time: v.dateAdded ? `${v.dateAdded}T00:00:00Z` : null,
+      details: epssDetail(epss, v.cve),
+    })),
+  );
   lanes.push(
     fortiguard.map((a) => {
       const kind = FORTIGUARD_KINDS[a.source] || FORTIGUARD_KINDS['Threat Signal'];

@@ -2895,5 +2895,6 @@
   "Voice control, and the F.A.N.G.S ASK copilot — API key or ChatGPT OAuth": "语音控制，以及 F.A.N.G.S 的 ASK 副驾 —— API 密钥或 ChatGPT OAuth",
   "The F.A.N.G.S ASK copilot and every “explain ▸” button: plain-English answers grounded in the live attack + coverage data. Optional; billing-enabled API key.": "F.A.N.G.S 的 ASK 副驾和每个“explain ▸”按钮：基于实时攻击与覆盖数据给出通俗易懂的解答。可选；需启用计费的 API 密钥。",
   "Run the ASK copilot on a local model instead — no key, nothing leaves your machine. Paste your Ollama server URL (e.g. http://localhost:11434).": "改用本地模型运行 ASK 副驾——无需密钥，数据不离开你的设备。粘贴你的 Ollama 服务器地址（例如 http://localhost:11434）。",
-  "Attack Map IP reputation from the CrowdSec community: what its sensors have actually seen an address DO (scanning, brute force, exploit attempts), with a confidence level. Free CTI key.": "攻击地图的 IP 信誉，来自 CrowdSec 社区：其传感器实际观测到某地址做过什么（扫描、暴力破解、漏洞利用尝试），并给出置信度。免费 CTI 密钥。"
+  "Attack Map IP reputation from the CrowdSec community: what its sensors have actually seen an address DO (scanning, brute force, exploit attempts), with a confidence level. Free CTI key.": "攻击地图的 IP 信誉，来自 CrowdSec 社区：其传感器实际观测到某地址做过什么（扫描、暴力破解、漏洞利用尝试），并给出置信度。免费 CTI 密钥。",
+  "Attack Map exploited-CVE alerts from VulnCheck KEV — about 3× the actively-exploited vulnerabilities on CISA’s list, flagging the ones not yet on CISA as an early warning, with ransomware use. Free community API token.": "攻击地图中来自 VulnCheck KEV 的在野利用 CVE 警报：约为 CISA 列表中正在被利用漏洞的 3 倍，将尚未进入 CISA 的条目标记为预警，并标注勒索软件使用情况。免费社区 API 令牌。"
 }

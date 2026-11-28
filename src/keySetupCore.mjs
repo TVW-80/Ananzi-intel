@@ -188,6 +188,16 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'free',
   }),
   Object.freeze({
+    id: 'vulncheck',
+    title: 'VULNCHECK', // i18n-ignore: provider product name
+    unlocks: msg(
+      'Attack Map exploited-CVE alerts from VulnCheck KEV — about 3× the actively-exploited vulnerabilities on CISA’s list, flagging the ones not yet on CISA as an early warning, with ransomware use. Free community API token.',
+    ),
+    getUrl: 'https://vulncheck.com/token',
+    envVars: Object.freeze(['VULNCHECK_API_KEY']),
+    tier: 'free',
+  }),
+  Object.freeze({
     id: 'crowdsec',
     title: 'CROWDSEC CTI', // i18n-ignore: provider product name
     unlocks: msg(

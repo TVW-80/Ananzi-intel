@@ -17,6 +17,7 @@ export const URLS = Object.freeze({
   blocklist: (service) => `https://lists.blocklist.de/lists/${service}.txt`,
   greynoise: (ip) => `https://api.greynoise.io/v3/community/${ip}`,
   crowdsec: (ip) => `https://cti.api.crowdsec.net/v2/smoke/${ip}`,
+  vulncheckKev: (limit = 100) => `https://api.vulncheck.com/v3/index/vulncheck-kev?limit=${limit}`,
   // High-volume attacker-IP lists for the worldwide scatter (all keyless).
   cins: 'https://cinsscore.com/list/ci-badguys.txt',
   etCompromised: 'https://rules.emergingthreats.net/blockrules/compromised-ips.txt',
@@ -350,6 +351,30 @@ export function normalizeGreyNoise(payload, httpStatus = 200) {
 }
 
 // ── CISA KEV ─────────────────────────────────────────────────────────────────
+/**
+ * VulnCheck KEV index → recent exploited CVEs. VulnCheck's community KEV is a
+ * superset of CISA's — it tracks ~3× as many actively-exploited CVEs and adds
+ * exploitation sources and ransomware-campaign use. Shape per the v3 API:
+ * { data: [{ cve:[], vulnerabilityName, vendorProject, product, date_added,
+ *   knownRansomwareCampaignUse, vulncheck_reported_exploitation:[{url,date_added}] }] }.
+ */
+export function normalizeVulncheckKev(payload, limit = 10) {
+  const rows = Array.isArray(payload?.data) ? payload.data : [];
+  return rows
+    .map((v) => ({
+      cve: str((v?.cve || [])[0]).toUpperCase(),
+      name: str(v?.vulnerabilityName),
+      vendor: str(v?.vendorProject),
+      product: str(v?.product),
+      ransomware: /known/i.test(str(v?.knownRansomwareCampaignUse)),
+      reportedBy: (v?.vulncheck_reported_exploitation || []).map((r) => str(r?.url)).filter(Boolean).slice(0, 3),
+      dateAdded: str(v?.date_added).slice(0, 10),
+    }))
+    .filter((v) => /^CVE-\d{4}-\d+$/.test(v.cve))
+    .sort((a, b) => b.dateAdded.localeCompare(a.dateAdded))
+    .slice(0, limit);
+}
+
 export function normalizeKev(payload, limit = 8) {
   const rows = Array.isArray(payload?.vulnerabilities) ? payload.vulnerabilities : [];
   return [...rows]

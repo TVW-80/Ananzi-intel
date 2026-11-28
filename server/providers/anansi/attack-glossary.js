@@ -227,6 +227,18 @@ export function kevExplained(v) {
   };
 }
 
+/** VulnCheck KEV entry → alert text. `onCisaKev` = already on CISA's list. */
+export function vulncheckExplained(v, onCisaKev = false) {
+  const where = [v.vendor, v.product].filter(Boolean).join(' ').trim() || 'a widely-used product';
+  return {
+    title: `${onCisaKev ? 'Confirmed' : 'Newly-flagged'} in-the-wild exploit: ${where}`,
+    plain: onCisaKev
+      ? `VulnCheck confirms attackers are exploiting a flaw in ${where}${v.ransomware ? ', including ransomware gangs' : ''} — it is also on CISA's must-fix list.`
+      : `VulnCheck reports attackers are already exploiting a flaw in ${where}${v.ransomware ? ', including ransomware gangs' : ''}. It is NOT yet on CISA's KEV list, so it can be an early warning.`,
+    technical: `VulnCheck KEV: ${v.cve}${v.name ? ` — ${v.name}` : ''}.${v.ransomware ? ' Known ransomware use.' : ''}${onCisaKev ? ' Also on CISA KEV.' : ' Not on CISA KEV.'}${v.reportedBy.length ? ` Reported: ${v.reportedBy.join(', ')}` : ''}`,
+  };
+}
+
 /** OTX pulse → alert text. */
 export function pulseExplained(p) {
   const fams = (p.malware_families || []).map((m) => (typeof m === 'string' ? m : m?.display_name || m?.id)).filter(Boolean);
