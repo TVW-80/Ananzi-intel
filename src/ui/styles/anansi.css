@@ -1779,6 +1779,11 @@ body:not(.ananzi-menu-open) #locale-picker { display: none !important; }
 .recon-techs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
 .recon-tech { font-family: var(--font-mono); font-size: 9px; color: #f4cf5e; text-decoration: none; border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 2px; padding: 0 3px; }
 .recon-tech:hover { background: rgba(212, 175, 55, 0.12); }
+/* Actor leads (known for the incident's techniques — a hypothesis, not attribution). */
+.recon-actors { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 4px; }
+.recon-actors-h { font-size: 8px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+.recon-actor { font-family: var(--font-mono); font-size: 9px; color: #8fd0ff; text-decoration: none; border: 1px solid rgba(63, 167, 255, 0.4); border-radius: 2px; padding: 0 4px; white-space: nowrap; }
+.recon-actor:hover { background: rgba(63, 167, 255, 0.14); }
 .recon-card-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 4px; }
 .recon-card-sub { font-family: var(--font-mono); font-size: 8.5px; color: var(--text-secondary); }
 .recon-copy { background: none; border: 1px solid rgba(212, 175, 55, 0.4); color: #f4cf5e; font-family: var(--font-mono); font-size: 8.5px; padding: 1px 6px; border-radius: 2px; cursor: pointer; white-space: nowrap; }

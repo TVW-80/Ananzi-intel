@@ -44,6 +44,8 @@ function compactIncident(inc) {
     techniques: (inc.techniques || []).slice(0, 8).map((t) => t.id),
     sources: (inc.sources || []).length,
     infrastructure: (inc.infrastructure || []).slice(0, 6).map((x) => (typeof x === 'string' ? x : x?.value || x?.ip || x?.id || '')).filter(Boolean),
+    // actor LEADS (known for these techniques) — never attribution
+    candidateActors: (inc.candidateActors || []).map((a) => ({ name: a.name, country: a.country, overlap: a.overlap, of: a.of })),
   };
 }
 
@@ -135,6 +137,21 @@ export function createReconBoard(doc = document, { now = () => Date.now(), onRep
         tl.append(a);
       }
       card.append(tl);
+    }
+    // Actor LEADS: known adversaries associated with these techniques. A
+    // hypothesis (RECON_DISCLAIMER covers the whole board), never attribution.
+    if ((inc.candidateActors || []).length) {
+      const row = el(doc, 'div', 'recon-actors');
+      row.append(el(doc, 'span', 'recon-actors-h', 'known for these TTPs:'));
+      for (const a of inc.candidateActors.slice(0, 3)) {
+        const chip = el(doc, 'a', 'recon-actor', `${a.name}${a.country ? ` · ${a.country}` : ''}`);
+        chip.href = `https://attack.mitre.org/groups/${a.id}/`;
+        chip.target = '_blank';
+        chip.rel = 'noopener noreferrer';
+        chip.title = `${a.name}${a.aliases?.length ? ` (aka ${a.aliases.slice(0, 2).join(', ')})` : ''}${a.sponsor ? ` · suspected sponsor: ${a.sponsor}` : ''} — matches ${a.overlap} of ${a.of} of this incident's techniques. A lead, not attribution.`;
+        row.append(chip);
+      }
+      card.append(row);
     }
     const foot = el(doc, 'div', 'recon-card-foot');
     foot.append(el(doc, 'span', 'recon-card-sub', `${(inc.sources || []).length} source${(inc.sources || []).length === 1 ? '' : 's'} · ${(inc.infrastructure || []).length} infra`));

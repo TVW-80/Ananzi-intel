@@ -64,6 +64,14 @@ export function caseFile(incident) {
     for (const t of i.techniques) lines.push(`- ${t.id} ${t.name} (${t.tacticName}) — https://attack.mitre.org/techniques/${t.id}/`);
     lines.push('');
   }
+  if ((i.candidateActors || []).length) {
+    lines.push('## Actors known for these techniques (LEADS — not attribution)', '');
+    for (const a of i.candidateActors) {
+      const akas = (a.aliases || []).slice(0, 3);
+      lines.push(`- ${a.name}${akas.length ? ` (aka ${akas.join(', ')})` : ''}${a.country ? ` · ${a.country}` : ''}${a.sponsor ? ` · suspected sponsor: ${a.sponsor}` : ''} — matches ${a.overlap} of ${a.of} techniques — https://attack.mitre.org/groups/${a.id}/`);
+    }
+    lines.push('');
+  }
   if ((i.infrastructure || []).length) lines.push('## Infrastructure', '', ...i.infrastructure.map((x) => `- ${x}`), '');
   if ((i.cves || []).length) lines.push('## CVEs', '', ...i.cves.map((c) => `- ${c}`), '');
   if ((i.malware || []).length) lines.push('## Malware / families', '', ...i.malware.map((m) => `- ${m}`), '');

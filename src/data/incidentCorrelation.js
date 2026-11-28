@@ -17,6 +17,7 @@
  */
 import { ttpFor } from './attackTtp.js';
 import { killChainPhase, pyramidLevel, confidenceOf, KILL_CHAIN } from './analystFrames.js';
+import { actorsForTechniques } from './threatActors.js';
 
 export const RECON_DISCLAIMER =
   'Correlated from public signals by shared actor, technique and time. A hypothesis, not confirmed attribution — co-occurrence is not causation.';
@@ -184,6 +185,8 @@ function finalize(inc) {
     killChainCoverage: killChain.length, // of 7
     furthestPhase,
     techniques: [...inc._tech.values()],
+    // Known actors associated with these techniques — a lead, not attribution.
+    candidateActors: actorsForTechniques([...inc._tech.keys()]),
     pyramidTop: inc._pyramidLevel ? { level: inc._pyramidLevel, pain: inc._pyramidPain, rank: inc._pyramidMax } : null,
     sources: [...inc._sources],
     infrastructure: [...inc._infra],
