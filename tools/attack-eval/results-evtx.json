@@ -1,0 +1,387 @@
+{
+  "generatedAt": "2026-11-28T00:29:54.508Z",
+  "source": "EVTX-ATTACK-SAMPLES (github.com/sbousseaden)",
+  "captures": 278,
+  "detectionRateAny": 0.7122,
+  "detectionRateMedium": 0.6367,
+  "detectedAny": 198,
+  "detectedMedium": 177,
+  "byTactic": {
+    "privilege-escalation": {
+      "total": 66,
+      "any": 58,
+      "medium": 50,
+      "rateAny": 0.8788
+    },
+    "execution": {
+      "total": 34,
+      "any": 28,
+      "medium": 26,
+      "rateAny": 0.8235
+    },
+    "persistence": {
+      "total": 22,
+      "any": 17,
+      "medium": 16,
+      "rateAny": 0.7727
+    },
+    "other": {
+      "total": 17,
+      "any": 12,
+      "medium": 10,
+      "rateAny": 0.7059
+    },
+    "command-and-control": {
+      "total": 6,
+      "any": 4,
+      "medium": 4,
+      "rateAny": 0.6667
+    },
+    "credential-access": {
+      "total": 39,
+      "any": 25,
+      "medium": 23,
+      "rateAny": 0.641
+    },
+    "defense-evasion": {
+      "total": 36,
+      "any": 23,
+      "medium": 21,
+      "rateAny": 0.6389
+    },
+    "lateral-movement": {
+      "total": 47,
+      "any": 27,
+      "medium": 24,
+      "rateAny": 0.5745
+    },
+    "discovery": {
+      "total": 11,
+      "any": 4,
+      "medium": 3,
+      "rateAny": 0.3636
+    }
+  },
+  "silent": [
+    {
+      "id": "Command_and_Control_DE_RDP_Tunneling_TerminalServices_RemoteConnectionManagerOperational_1149",
+      "tactic": "command-and-control"
+    },
+    {
+      "id": "Command_and_Control_bits_openvpn",
+      "tactic": "command-and-control"
+    },
+    {
+      "id": "Credential_Access_CA_4624_4625_LogonType2_LogonProc_chrome",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_CA_PetiPotam_etw_rpc_efsr_5_6",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_CA_teamviewer_dumper_sysmon_10",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_LsassSilentProcessExit_process_exit_monitor_3001_lsass",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_MSSQL_multiple_failed_logon_EventID_18456",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_Sysmon13_MachineAccount_Password_Hash_Changed_via_LsarSetSecret",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_Sysmon_13_Local_Admin_Password_Changed",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_Zerologon_CVE_2020_1472_DFIR_System_NetLogon_Error_EventID_5805",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_Zerologon_VoidSec_CVE_2020_1472_4626_LT3_Anonym_follwedby_4742_DC_Anony_DC",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_dc_applog_ntdsutil_dfir_325_326_327",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_etw_rpc_zerologon",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_kerberos_pwd_spray_4771",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_remote_pwd_reset_rpc_mimikatz_postzerologon_target_DC",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Credential_Access_sysmon17_18_kekeo_tsssp_default_np",
+      "tactic": "credential-access"
+    },
+    {
+      "id": "Defense_Evasion_DE_104_system_log_cleared",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_1102_security_log_cleared",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_EventLog_Service_Crashed",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_KernelDebug_and_TestSigning_ON_Security_4826",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_Powershell_CLM_Disabled_Sysmon_12",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_WinEventLogSvc_Crash_System_7036",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_remote_eventlog_svc_crash_byt3bl33d3r_sysmon_17_1_3",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_renamed_psexec_service_sysmon_17_18",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_suspicious_remote_eventlog_svc_access_5145",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_DE_xp_cmdshell_enabled_MSSQL_EID_15457",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_Win_4985_T1186_Process_Doppelganging",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_de_powershell_execpolicy_changed_sysmon_13",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Defense_Evasion_meterpreter_migrate_to_explorer_sysmon_8",
+      "tactic": "defense-evasion"
+    },
+    {
+      "id": "Discovery_4799_remote_local_groups_enumeration",
+      "tactic": "discovery"
+    },
+    {
+      "id": "Discovery_Discovery_Remote_System_NamedPipes_Sysmon_18",
+      "tactic": "discovery"
+    },
+    {
+      "id": "Discovery_discovery_bloodhound",
+      "tactic": "discovery"
+    },
+    {
+      "id": "Discovery_discovery_enum_shares_target_sysmon_3_18",
+      "tactic": "discovery"
+    },
+    {
+      "id": "Discovery_discovery_local_user_or_group_windows_security_4799_4798",
+      "tactic": "discovery"
+    },
+    {
+      "id": "Discovery_discovery_psloggedon",
+      "tactic": "discovery"
+    },
+    {
+      "id": "Discovery_discovery_sysmon_18_Invoke_UserHunter_NetSessionEnum_DC_srvsvc",
+      "tactic": "discovery"
+    },
+    {
+      "id": "Execution_Exec_via_cpl_Application_Experience_EventID_17_ControlPanelApplet",
+      "tactic": "execution"
+    },
+    {
+      "id": "Execution_evasion_execution_imageload_wuauclt_lolbas",
+      "tactic": "execution"
+    },
+    {
+      "id": "Execution_exec_driveby_cve_2018_15982_sysmon_1_10",
+      "tactic": "execution"
+    },
+    {
+      "id": "Execution_revshell_cmd_svchost_sysmon_1",
+      "tactic": "execution"
+    },
+    {
+      "id": "Execution_rogue_msi_url_1040_1042",
+      "tactic": "execution"
+    },
+    {
+      "id": "Execution_windows_bits_4_59_60_lolbas_desktopimgdownldr",
+      "tactic": "execution"
+    },
+    {
+      "id": "Lateral_Movement_DFIR_RDP_Client_TimeZone_RdpCoreTs_104_example",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_5145_Remote_FileCopy",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_NewShare_Added_Sysmon_12_13",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_REMCOM_5145_TargetHost",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_Remote_Service01_5145_svcctl",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_Remote_Service02_7045",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_WMI_4624_4688_TargetHost",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_add_new_namedpipe_tp_nullsession_registry_turla_like_ttp",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_dcom_shwnd_shbrwnd_mmc20_failed_traces_system_10016",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_renamed_psexecsvc_5145",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_sysmon_3_DCOM_ShellBrowserWindow_ShellWindows",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_winrm_target_wrmlogs_91_wsmanShellStarted_poorLog",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_LM_xp_cmdshell_MSSQL_Events",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_MSSQL_15281_xp_cmdshell_exec_failed_attempt",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_RemotePowerShell_MS_Windows_Remote_Management_EventID_169",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_dfir_rdpsharp_target_RdpCoreTs_168_68_131",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_net_share_drive_5142",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_sharprdp_sysmon_7_mstscax_dll",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_smb_bi_auth_conn_spoolsample",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Lateral_Movement_spoolsample_5145",
+      "tactic": "lateral-movement"
+    },
+    {
+      "id": "Other_emotet_exec_emotet_ps_800_get_item",
+      "tactic": "other"
+    },
+    {
+      "id": "Other_emotet_exec_emotet_ps_800_invoke_item",
+      "tactic": "other"
+    },
+    {
+      "id": "Other_emotet_exec_emotet_ps_800_new_item",
+      "tactic": "other"
+    },
+    {
+      "id": "Other_emotet_exec_emotet_ps_800_new_object",
+      "tactic": "other"
+    },
+    {
+      "id": "Other_rdpcorets_148_mst120_bluekeep_rpdscan_full",
+      "tactic": "other"
+    },
+    {
+      "id": "Persistence_Persistence_Shime_Microsoft_Windows_Application_Experience_Program_Telemetry_500",
+      "tactic": "persistence"
+    },
+    {
+      "id": "Persistence_Persistence_Winsock_Catalog_Change_EventId_1",
+      "tactic": "persistence"
+    },
+    {
+      "id": "Persistence_persist_bitsadmin_Microsoft_Windows_Bits_Client_Operational",
+      "tactic": "persistence"
+    },
+    {
+      "id": "Persistence_persistence_pendingGPO_sysmon_13",
+      "tactic": "persistence"
+    },
+    {
+      "id": "Persistence_sysmon_local_account_creation_and_added_admingroup_12_13",
+      "tactic": "persistence"
+    },
+    {
+      "id": "Privilege_Escalation_PrivEsc_CVE_2020_1313_Sysmon_13_UScheduler_Cmdline",
+      "tactic": "privilege-escalation"
+    },
+    {
+      "id": "Privilege_Escalation_PrivEsc_NetSvc_SessionToken_Retrival_via_localSMB_Auth_5145",
+      "tactic": "privilege-escalation"
+    },
+    {
+      "id": "Privilege_Escalation_Runas_4624_4648_Webshell_CreateProcessAsUserA",
+      "tactic": "privilege-escalation"
+    },
+    {
+      "id": "Privilege_Escalation_System_7045_namedpipe_privesc",
+      "tactic": "privilege-escalation"
+    },
+    {
+      "id": "Privilege_Escalation_sysmon_13_1_12_11_perfmonUACBypass",
+      "tactic": "privilege-escalation"
+    },
+    {
+      "id": "Privilege_Escalation_sysmon_1_7_11_migwiz",
+      "tactic": "privilege-escalation"
+    },
+    {
+      "id": "Privilege_Escalation_sysmon_1_7_11_sysprep_uacbypass",
+      "tactic": "privilege-escalation"
+    },
+    {
+      "id": "Privilege_Escalation_win10_4703_SeDebugPrivilege_enabled",
+      "tactic": "privilege-escalation"
+    }
+  ]
+}

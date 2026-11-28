@@ -163,6 +163,41 @@ of Enterprise, 13/15 tactics** — is strong. The gap to 0.80 F1 is the roadmap:
 add registry / network / script-block log sources and a technique-equivalence
 map. This is exactly the measured, defensible footing the harness exists to give.
 
+### Real-attack detection rate (EVTX-ATTACK-SAMPLES) — `evtx-eval.mjs`
+
+A third, complementary measurement on a different kind of ground truth.
+[EVTX-ATTACK-SAMPLES](https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES) is 278
+curated, real Windows event-log captures of attacker behaviour, filed by ATT&CK
+**tactic** with no per-file technique label. Because every capture *is* malicious,
+the only honest question is **capture-level detection rate**: of these real
+attacks, on how many does the detector fire at least one rule — and where is it
+silent? This is a true-positive-rate at the capture level, deliberately *not*
+technique recall (there is no per-file technique to recall), so it is reported on
+its own and never folded into the recall number above.
+
+**198/278 captures fire a rule — 71.2% overall, 63.7% at the medium+ tier a SOC
+would actually alert on.** By tactic (any · medium+):
+
+| tactic | detected | rate | medium+ |
+|---|---|---|---|
+| privilege-escalation | 58/66 | 87.9% | 75.8% |
+| execution | 28/34 | 82.3% | 76.5% |
+| persistence | 17/22 | 77.3% | 72.7% |
+| command-and-control | 4/6 | 66.7% | 66.7% |
+| credential-access | 25/39 | 64.1% | 59.0% |
+| defense-evasion | 23/36 | 63.9% | 58.3% |
+| lateral-movement | 27/47 | 57.5% | 51.1% |
+| discovery | 4/11 | 36.4% | 27.3% |
+
+The blind spots are informative, not embarrassing: **discovery** (36%) is quiet
+native-tool recon — `nltest`, `net`, LDAP enumeration — that looks like admin
+activity on a bare process event; **lateral-movement** (57%) leans on captures
+that need Kerberos/logon-session correlation (Zerologon 5805/4742 chains, RDP
+tunnelling, pass-the-hash) that single-event Sigma rules can't see. Those are the
+same two sensor/correlation gaps the recall and command-corpus judges name — three
+independent datasets pointing at one roadmap. The 80 silent captures are listed in
+`results-evtx.json` so the gaps stay concrete.
+
 ## Reproduce
 
 ```bash
@@ -172,6 +207,7 @@ git clone --depth 1 https://github.com/mitre/cti.git mitre-cti
 git clone --depth 1 https://github.com/redcanaryco/atomic-red-team.git
 git clone --depth 1 https://github.com/SigmaHQ/sigma.git
 git clone --depth 1 https://github.com/OTRF/Security-Datasets.git   # real telemetry (needs `unzip`)
+git clone --depth 1 https://github.com/sbousseaden/EVTX-ATTACK-SAMPLES.git  # real malicious EVTX
 
 # 2. from the repo root (ATTACK_DATA defaults to /home/claude/attack-data)
 export ATTACK_DATA=~/attack-data
@@ -179,6 +215,9 @@ node tools/attack-eval/sigma-eval.mjs      --json tools/attack-eval/results-dete
 node tools/attack-eval/telemetry-eval.mjs  --json tools/attack-eval/results-telemetry.json
 node tools/attack-eval/coverage.mjs        --json tools/attack-eval/results-coverage.json \
      --layer tools/attack-eval/fangs-attack-layer.json
+# EVTX detection rate: convert once (needs `pip install evtx`), then score
+python3 tools/attack-eval/evtx_to_json.py ~/attack-data/EVTX-ATTACK-SAMPLES ~/attack-data/evtx-json
+node tools/attack-eval/evtx-eval.mjs       --json tools/attack-eval/results-evtx.json
 # 3. regenerate the app's coverage data from those results (never hand-edit it)
 node tools/attack-eval/snapshot.mjs        # → src/anansi/coverageData.generated.js
 ```
@@ -197,7 +236,10 @@ versions.
 `attack-eval.test.mjs` is **hermetic** — it exercises the Sigma engine (field
 modifiers, condition grammar, technique-tag parsing) and the scorer math with
 inline fixtures, so it runs in CI with no dataset clones. It runs under
-`npm test` (the `tools/` root was added to the unit runner).
+`npm test` (the `tools/` root was added to the unit runner). `evtx-eval.test.mjs`
+is hermetic the same way — it drives the real routing + Sigma engine over a
+hand-built detector and synthetic captures, so the detection-rate scorer and its
+blind-spot tally are covered without the 50 MB EVTX clone.
 
 ## Honesty notes
 
