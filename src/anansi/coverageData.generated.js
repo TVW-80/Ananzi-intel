@@ -149,6 +149,79 @@ export const COVERAGE_DATA = Object.freeze({
   ],
   "bar": 0.8
  },
+ "evtx": {
+  "rateAny": 0.7122,
+  "rateMedium": 0.6367,
+  "detectedAny": 198,
+  "detectedMedium": 177,
+  "captures": 278,
+  "silent": 80,
+  "byTactic": [
+   {
+    "tactic": "privilege-escalation",
+    "total": 66,
+    "any": 58,
+    "medium": 50,
+    "rateAny": 0.8788
+   },
+   {
+    "tactic": "execution",
+    "total": 34,
+    "any": 28,
+    "medium": 26,
+    "rateAny": 0.8235
+   },
+   {
+    "tactic": "persistence",
+    "total": 22,
+    "any": 17,
+    "medium": 16,
+    "rateAny": 0.7727
+   },
+   {
+    "tactic": "other",
+    "total": 17,
+    "any": 12,
+    "medium": 10,
+    "rateAny": 0.7059
+   },
+   {
+    "tactic": "command-and-control",
+    "total": 6,
+    "any": 4,
+    "medium": 4,
+    "rateAny": 0.6667
+   },
+   {
+    "tactic": "credential-access",
+    "total": 39,
+    "any": 25,
+    "medium": 23,
+    "rateAny": 0.641
+   },
+   {
+    "tactic": "defense-evasion",
+    "total": 36,
+    "any": 23,
+    "medium": 21,
+    "rateAny": 0.6389
+   },
+   {
+    "tactic": "lateral-movement",
+    "total": 47,
+    "any": 27,
+    "medium": 24,
+    "rateAny": 0.5745
+   },
+   {
+    "tactic": "discovery",
+    "total": 11,
+    "any": 4,
+    "medium": 3,
+    "rateAny": 0.3636
+   }
+  ]
+ },
  "drift": [
   {
    "from": "T1562",
@@ -166,11 +239,12 @@ export const COVERAGE_DATA = Object.freeze({
    "name": "DLL"
   }
  ],
- "source": "ATT&CK v20.1 · Atomic Red Team · SigmaHQ · OTRF Security-Datasets",
+ "source": "ATT&CK v20.1 · Atomic Red Team · SigmaHQ · OTRF Security-Datasets · EVTX-ATTACK-SAMPLES",
  "generatedFrom": {
   "coverage": "2026-11-27T23:54:34.703Z",
   "detection": "2026-11-25T23:55:25.924Z",
-  "telemetry": "2026-11-27T23:54:00.077Z"
+  "telemetry": "2026-11-27T23:54:00.077Z",
+  "evtx": "2026-11-28T00:29:54.508Z"
  },
  "matrix": [
   {

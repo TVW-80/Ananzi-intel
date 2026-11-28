@@ -95,7 +95,7 @@ export function matrixSkeleton(bundle) {
 }
 
 /** Pure: the app's coverage data from the three result files + the matrix skeleton. */
-export function buildSnapshot({ coverage, detection, telemetry, skeleton }) {
+export function buildSnapshot({ coverage, detection, telemetry, evtx = null, skeleton }) {
   const sets = evidenceSets({ coverage, detection, telemetry });
   const s = coverage.surfaces || {};
   const surf = (x) => ({ techniques: x.techniqueCount, pct: Number(x.techniquePct.toFixed(1)), tactics: x.tacticCount });
@@ -126,10 +126,20 @@ export function buildSnapshot({ coverage, detection, telemetry, skeleton }) {
       operatingPoints: telemetry.operatingPoints || [],
       bar: telemetry.judge?.bar ?? 0.8,
     },
+    // Capture-level detection rate on EVTX-ATTACK-SAMPLES (real malicious EVTX, tactic-labeled).
+    // A distinct measurement from recall — "did any rule fire on this real attack?" — never folded in.
+    evtx: evtx ? {
+      rateAny: evtx.detectionRateAny, rateMedium: evtx.detectionRateMedium,
+      detectedAny: evtx.detectedAny, detectedMedium: evtx.detectedMedium,
+      captures: evtx.captures, silent: (evtx.silent || []).length,
+      byTactic: Object.entries(evtx.byTactic || {}).map(([tactic, t]) => ({
+        tactic, total: t.total, any: t.any, medium: t.medium, rateAny: t.rateAny,
+      })),
+    } : null,
     drift: (coverage.drift || []).map(parseDrift).filter(Boolean),
-    source: `ATT&CK ${version} · Atomic Red Team · SigmaHQ · OTRF Security-Datasets`,
+    source: `ATT&CK ${version} · Atomic Red Team · SigmaHQ · OTRF Security-Datasets${evtx ? ' · EVTX-ATTACK-SAMPLES' : ''}`,
     generatedFrom: {
-      coverage: coverage.generatedAt || null, detection: detection.generatedAt || null, telemetry: telemetry.generatedAt || null,
+      coverage: coverage.generatedAt || null, detection: detection.generatedAt || null, telemetry: telemetry.generatedAt || null, evtx: evtx?.generatedAt || null,
     },
     matrix,
   };
@@ -147,7 +157,8 @@ export function renderModule(snapshot) {
 
 export function loadResults(dir = HERE) {
   const j = (f) => JSON.parse(readFileSync(join(dir, f), 'utf8'));
-  return { coverage: j('results-coverage.json'), detection: j('results-detection.json'), telemetry: j('results-telemetry.json') };
+  const opt = (f) => { try { return j(f); } catch { return null; } }; // evtx is additive — degrade if not yet run
+  return { coverage: j('results-coverage.json'), detection: j('results-detection.json'), telemetry: j('results-telemetry.json'), evtx: opt('results-evtx.json') };
 }
 
 function main() {

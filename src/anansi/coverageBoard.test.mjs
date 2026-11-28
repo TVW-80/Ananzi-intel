@@ -48,6 +48,23 @@ test('real-telemetry scorecard is internally consistent', () => {
   assert.ok(tm.sensors >= 2, 'multi-sensor');
 });
 
+test('EVTX real-attack detection rate is internally consistent (capture-level, not recall)', () => {
+  const e = COVERAGE_DATA.evtx;
+  if (!e) return; // additive — absent where the EVTX judge has not been run
+  assert.ok(e.rateAny >= 0 && e.rateAny <= 1);
+  assert.ok(e.rateMedium >= 0 && e.rateMedium <= e.rateAny + 1e-9, 'medium+ tier is a subset of any-rule');
+  assert.ok(e.detectedMedium <= e.detectedAny && e.detectedAny <= e.captures, 'medium+ ⊆ detected ⊆ captures');
+  assert.ok(Math.abs(e.rateAny - e.detectedAny / e.captures) < 0.005, 'rate == detected / captures');
+  assert.equal(e.detectedAny + e.silent, e.captures, 'detected + silent == captures');
+  const sum = (k) => e.byTactic.reduce((n, t) => n + t[k], 0);
+  assert.equal(sum('total'), e.captures, 'per-tactic totals sum to captures');
+  assert.equal(sum('any'), e.detectedAny, 'per-tactic detections sum to the overall');
+  for (const t of e.byTactic) {
+    assert.ok(t.medium <= t.any && t.any <= t.total, `${t.tactic}: medium ⊆ any ⊆ total`);
+    assert.ok(Math.abs(t.rateAny - t.any / t.total) < 0.005, `${t.tactic} rate matches its counts`);
+  }
+});
+
 test('coverageGap is a bounded, faithful copilot focus drawn from the snapshot', () => {
   const g = coverageGap();
   assert.equal(g.kind, 'coverage'); // routes the copilot to the gaps prompt

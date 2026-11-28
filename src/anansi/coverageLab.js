@@ -345,6 +345,39 @@ function operatingChart(doc, D, tipApi) {
   return s;
 }
 
+/** Prettify a kebab-case ATT&CK tactic id → "Privilege escalation". */
+const tacticLabel = (s) => String(s).replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+
+/**
+ * Detection rate on real malicious EVTX captures, by tactic — a horizontal meter
+ * list. Bar = any rule fired; marker = the medium+ tier a SOC alerts on (always a
+ * subset, so it sits inside the bar). Same track visual as the ablation meters.
+ */
+function realAttackStrip(doc, D, tipApi) {
+  const e = D.evtx;
+  const rows = [...(e.byTactic || [])]; // already sorted desc by rateAny in the snapshot
+  const list = el(doc, 'div', 'covlab-meters');
+  for (const r of rows) {
+    const medRate = r.total ? r.medium / r.total : 0;
+    const row = el(doc, 'div', 'covlab-meter-row');
+    row.tabIndex = 0;
+    const track = el(doc, 'span', 'covlab-track');
+    const fill = el(doc, 'span', 'covlab-track-fill');
+    fill.style.width = `${Math.min(100, 100 * r.rateAny)}%`;
+    const mark = el(doc, 'span', 'covlab-track-bar');
+    mark.style.left = `${Math.min(100, 100 * medRate)}%`;
+    track.append(fill, mark);
+    row.append(el(doc, 'span', 'covlab-meter-name', tacticLabel(r.tactic)), track, el(doc, 'span', 'covlab-meter-val', pct(r.rateAny)));
+    row.setAttribute('aria-label', `${tacticLabel(r.tactic)}: ${pct(r.rateAny)} of ${r.total} captures fire a rule, ${pct(medRate)} at the medium+ tier`);
+    bindTip(row, tipApi, `${tacticLabel(r.tactic)}\nfires a rule: ${pct(r.rateAny)} (${r.any}/${r.total})\nmedium+ tier: ${pct(medRate)} (${r.medium}/${r.total})`);
+    list.append(row);
+  }
+  const axis = el(doc, 'div', 'covlab-meter-axis');
+  axis.append(el(doc, 'span', null, ''), el(doc, 'span', 'covlab-meter-axis-note', `bar = any rule · marker = medium+ tier · ${e.silent} captures silent`), el(doc, 'span', null, ''));
+  list.append(axis);
+  return list;
+}
+
 // ── table view (the WCAG-clean twin of every visual) ─────────────────────────
 function table(doc, caption, head, rows) {
   const t = el(doc, 'table', 'covlab-table');
@@ -437,6 +470,11 @@ export function createCoverageLab(doc = document, { data = COVERAGE_DATA, onExpl
         section('HOW EACH FIX MOVED DETECTION', 'One fix at a time, same captures, same judge (tools/attack-eval).', ablationMeters(doc, D, tipApi)),
         section('PRECISION vs RECALL BY SIGMA LEVEL', 'Alerting only on rules at or above each level. Every point is reported; none was picked after the fact.', operatingChart(doc, D, tipApi)),
       );
+      if (D.evtx) {
+        nodes.push(section('REAL-ATTACK DETECTION RATE BY TACTIC',
+          `${D.evtx.detectedAny} of ${D.evtx.captures} curated malicious EVTX captures fire a rule — ${pct(D.evtx.rateAny)} (${pct(D.evtx.rateMedium)} at the medium+ tier). A capture-level true-positive rate, distinct from recall above.`,
+          realAttackStrip(doc, D, tipApi)));
+      }
     } else {
       const byEv = EVIDENCE_ORDER.flatMap((e) => [...stats.techniques.values()].filter((r) => r.ev === e).sort((a, b) => a.id.localeCompare(b.id)).map((r) => [EVIDENCE_UI[e].short, r.id, r.name, r.tactics.join(', '), r.active ? 'yes' : '']));
       nodes.push(
@@ -444,6 +482,11 @@ export function createCoverageLab(doc = document, { data = COVERAGE_DATA, onExpl
         table(doc, 'Operating points by Sigma level', ['alert on level ≥', 'recall', 'alert precision', 'F1', 'captures'], (tm.operatingPoints || []).map((o) => [o.level, pct(o.recall), pct(o.alertPrecision), pct(o.f1), `${o.detected}/${tm.captures}`])),
         table(doc, `ATT&CK ${D.attack} techniques by evidence`, ['evidence', 'id', 'technique', 'tactics', 'live attribution'], byEv),
       );
+      if (D.evtx) {
+        nodes.push(table(doc, `Real-attack detection rate by tactic (EVTX-ATTACK-SAMPLES, ${D.evtx.captures} captures)`,
+          ['tactic', 'fires a rule', 'medium+ tier', 'captures'],
+          D.evtx.byTactic.map((r) => [tacticLabel(r.tactic), pct(r.rateAny), pct(r.total ? r.medium / r.total : 0), `${r.any}/${r.total}`])));
+      }
     }
     const drift = (D.drift || []).map((d) => `${d.from}→${d.to}`).join(', ');
     nodes.push(el(doc, 'p', 'covlab-foot', `Scored against ${D.source}. ATT&CK drift handled via MITRE revoked-by (${drift || 'none'}). Generated from the judges' result files${D.generatedFrom?.telemetry ? ` · telemetry run ${String(D.generatedFrom.telemetry).slice(0, 10)}` : ''}.`));
