@@ -18,6 +18,8 @@ export const URLS = Object.freeze({
   greynoise: (ip) => `https://api.greynoise.io/v3/community/${ip}`,
   crowdsec: (ip) => `https://cti.api.crowdsec.net/v2/smoke/${ip}`,
   vulncheckKev: (limit = 100) => `https://api.vulncheck.com/v3/index/vulncheck-kev?limit=${limit}`,
+  censysAggregate: (query, field = 'location.country_code', buckets = 20) =>
+    `https://search.censys.io/api/v2/hosts/aggregate?q=${encodeURIComponent(query)}&field=${encodeURIComponent(field)}&num_buckets=${buckets}`,
   // High-volume attacker-IP lists for the worldwide scatter (all keyless).
   cins: 'https://cinsscore.com/list/ci-badguys.txt',
   etCompromised: 'https://rules.emergingthreats.net/blockrules/compromised-ips.txt',
@@ -53,6 +55,17 @@ export const URLS = Object.freeze({
 });
 
 /** The exposure scoreboard's services — each a free Shodan count query. */
+/** Censys host-search queries matching EXPOSURE_QUERIES by id — Censys's own
+ *  syntax, so it's a genuine second opinion, not a re-run of the Shodan query. */
+export const CENSYS_EXPOSURE_QUERIES = Object.freeze([
+  { id: 'rdp', query: 'services.port: 3389' },
+  { id: 'telnet', query: 'services.port: 23' },
+  { id: 'smb', query: 'services.port: 445' },
+  { id: 'databases', query: 'services.service_name: {MONGODB, ELASTICSEARCH, REDIS}' },
+  { id: 'ics', query: 'labels: ics' },
+  { id: 'cameras', query: 'labels: camera' },
+]);
+
 export const EXPOSURE_QUERIES = Object.freeze([
   { id: 'rdp', label: 'Remote Desktop (RDP)', query: 'port:3389', plain: 'Windows Remote Desktop open to the internet — a top way ransomware crews break in.', technical: 'Shodan host/count port:3389.' },
   { id: 'telnet', label: 'Telnet', query: 'port:23', plain: 'Old, unencrypted remote logins — the doorway IoT botnets like Mirai walk through.', technical: 'Shodan host/count port:23.' },
@@ -599,6 +612,18 @@ export function prettyCpe(cpe) {
 }
 
 // ── Shodan free count facets (exposure scoreboard) ───────────────────────────
+/** Censys v2 hosts/aggregate → { total, top:[{country,count}] }. Shape:
+ *  { result: { total, buckets:[{key,count}] } } with key = country code. */
+export function normalizeCensysAggregate(payload) {
+  const r = payload?.result || {};
+  const total = Number(r.total);
+  const top = (Array.isArray(r.buckets) ? r.buckets : [])
+    .map((b) => ({ country: String(b?.key || '').toUpperCase(), count: Number(b?.count) || 0 }))
+    .filter((b) => /^[A-Z]{2}$/.test(b.country) && b.count > 0)
+    .slice(0, 8);
+  return { total: Number.isFinite(total) ? total : top.reduce((s, f) => s + f.count, 0), top };
+}
+
 export function normalizeShodanCount(payload) {
   const total = Number(payload?.total);
   const facets = payload?.facets?.country;

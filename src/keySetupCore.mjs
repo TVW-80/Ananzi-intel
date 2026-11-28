@@ -188,6 +188,16 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'free',
   }),
   Object.freeze({
+    id: 'censys',
+    title: 'CENSYS', // i18n-ignore: provider product name
+    unlocks: msg(
+      'A second opinion on the Exposed layers: Censys’s own internet scan counts (RDP, SMB, databases, ICS, cameras) shown beside Shodan’s. Free tier — create an API ID and secret.',
+    ),
+    getUrl: 'https://search.censys.io/account/api',
+    envVars: Object.freeze(['CENSYS_API_ID', 'CENSYS_API_SECRET']),
+    tier: 'free',
+  }),
+  Object.freeze({
     id: 'vulncheck',
     title: 'VULNCHECK', // i18n-ignore: provider product name
     unlocks: msg(

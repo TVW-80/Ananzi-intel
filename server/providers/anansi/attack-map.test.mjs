@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   buildSources,
   buildCertPoints,
+  mergeExposure,
   createAttackMapService,
   normalizeIp,
   normalizeIpInfo,
@@ -10,6 +11,22 @@ import {
   normalizeTopPorts,
   parseRssItems,
 } from './attack-map.js';
+
+test('mergeExposure: Shodan stays primary + Censys cross-check; Censys alone when Shodan is empty', () => {
+  const shodan = [{ id: 'rdp', label: 'RDP', plain: 'p', technical: 'Shodan rdp.', total: 1000, top: [] }];
+  const censys = { rdp: { total: 1100, top: [{ country: 'US', count: 900 }] } };
+  const merged = mergeExposure(shodan, censys);
+  assert.equal(merged[0].total, 1000); // Shodan total stays primary
+  assert.equal(merged[0].censysTotal, 1100);
+  assert.match(merged[0].technical, /Censys second opinion: 1,100 hosts/);
+  // no Censys → rows unchanged
+  assert.equal(mergeExposure(shodan, null)[0].censysTotal, undefined);
+  // Shodan absent → Censys stands alone, rows built from the exposure catalogue
+  const alone = mergeExposure([], { smb: { total: 50, top: [] }, rdp: { total: 200, top: [] } });
+  assert.equal(alone.length, 2);
+  assert.equal(alone[0].id, 'rdp'); // sorted by total desc
+  assert.match(alone[0].technical, /Censys/);
+});
 
 test('buildCertPoints groups resolved lookalikes by country, carries brands, drops the unlocated', () => {
   const pts = buildCertPoints([

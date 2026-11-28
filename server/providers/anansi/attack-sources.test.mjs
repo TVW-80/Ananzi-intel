@@ -146,7 +146,19 @@ test('buildAttackerIps merges + dedupes feeds, ranks by corroboration, caps', ()
   assert.deepEqual(buildAttackerIps({}), []);
 });
 
-import { normalizeVirusTotalIp, normalizeCrowdsec, normalizeVulncheckKev } from './attack-sources.js';
+import { normalizeVirusTotalIp, normalizeCrowdsec, normalizeVulncheckKev, normalizeCensysAggregate } from './attack-sources.js';
+
+test('Censys v2 aggregate → total + per-country top; junk buckets dropped', () => {
+  const c = normalizeCensysAggregate({ result: { total: 1234, buckets: [
+    { key: 'US', count: 800 }, { key: 'cn', count: 300 }, { key: 'ZZ9', count: 10 }, { key: 'RU', count: 0 },
+  ] } });
+  assert.equal(c.total, 1234);
+  assert.deepEqual(c.top, [{ country: 'US', count: 800 }, { country: 'CN', count: 300 }]);
+  // no total given → summed from buckets
+  assert.equal(normalizeCensysAggregate({ result: { buckets: [{ key: 'US', count: 5 }] } }).total, 5);
+  assert.deepEqual(normalizeCensysAggregate({}).top, []);
+  assert.deepEqual(normalizeCensysAggregate(null).top, []);
+});
 
 test('VulnCheck KEV index → recent exploited CVEs, newest first; bad rows dropped', () => {
   const rows = normalizeVulncheckKev({ data: [

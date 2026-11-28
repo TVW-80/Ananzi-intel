@@ -49,6 +49,8 @@ import {
   malpediaLookup,
   defang,
   EXPOSURE_QUERIES,
+  CENSYS_EXPOSURE_QUERIES,
+  normalizeCensysAggregate,
   normalizeInternetDb,
   normalizeShodanCount,
   prettyCpe,
@@ -130,6 +132,7 @@ const SOURCE_TTL = Object.freeze({
   c2intel: 6 * 60 * MIN,
   malpedia: 7 * 24 * 60 * MIN,
   exposure: 6 * 60 * MIN, // free Shodan count facets
+  censys: 6 * 60 * MIN, // Censys exposure second opinion
   // Worldwide-scatter attacker-IP feeds.
   cins: 60 * MIN,
   et: 60 * MIN,
@@ -519,6 +522,26 @@ export function buildCertPoints(hosts) {
     .sort((a, b) => b.count - a.count);
 }
 
+/**
+ * Merge the Shodan exposure rows with Censys's second opinion (id -> {total,top}).
+ * Shodan stays primary; each row gains Censys's count as a cross-check. When
+ * Shodan is absent, Censys stands alone as the exposure source.
+ */
+export function mergeExposure(shodanRows, censys) {
+  if (!censys) return shodanRows;
+  if (shodanRows.length) {
+    return shodanRows.map((r) => {
+      const c = censys[r.id];
+      return c ? { ...r, censysTotal: c.total, technical: `${r.technical} Censys second opinion: ${c.total.toLocaleString('en-US')} hosts.` } : r;
+    });
+  }
+  // Shodan unavailable → build rows from Censys alone.
+  return EXPOSURE_QUERIES
+    .filter((q) => censys[q.id])
+    .map((q) => ({ id: q.id, label: q.label, plain: q.plain, technical: `Censys hosts/aggregate (${q.id}).`, total: censys[q.id].total, top: censys[q.id].top }))
+    .sort((a, b) => b.total - a.total);
+}
+
 /** BGP hijacks → arcs from the hijacker's country to the victim's. */
 export function buildHijacks(events) {
   return events
@@ -843,6 +866,24 @@ export function createAttackMapService({
     return rows.sort((a, b) => b.total - a.total);
   }
 
+  /** Censys exposure counts — a second opinion on the same risky services. */
+  async function censysExposure() {
+    const id = env('CENSYS_API_ID');
+    const secret = env('CENSYS_API_SECRET');
+    if (!id || !secret) return KEY_REQUIRED;
+    const auth = `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`;
+    const results = await Promise.allSettled(
+      CENSYS_EXPOSURE_QUERIES.map(async (q) => {
+        const body = normalizeCensysAggregate(await getJson(URLS.censysAggregate(q.query), { headers: { Authorization: auth, Accept: 'application/json' } }));
+        return [q.id, { total: body.total, top: body.top }];
+      }),
+    );
+    const out = {};
+    for (const r of results) if (r.status === 'fulfilled') out[r.value[0]] = r.value[1];
+    if (!Object.keys(out).length) throw results[0]?.reason || new Error('no Censys data');
+    return out; // { id -> { total, top } }
+  }
+
   async function dshield(errors) {
     let ips = [];
     try {
@@ -1012,6 +1053,7 @@ export function createAttackMapService({
     c2intel: async () => parseC2Intel(await getText(URLS.c2intel)),
     malpedia: async () => normalizeMalpedia(await getJson(URLS.malpedia)),
     exposure: exposureScoreboard,
+    censys: censysExposure,
     // Worldwide-scatter attacker-IP feeds (all keyless); geolocated per-IP below.
     cins: async () => await getText(URLS.cins),
     et: async () => await getText(URLS.etCompromised),
@@ -1183,7 +1225,7 @@ export function createAttackMapService({
         })),
         targets: radar.targets,
       },
-      exposure: val('exposure') || [],
+      exposure: mergeExposure(val('exposure') || [], val('censys') || null),
       ports: dsh.ports.map((p) => ({ ...p, ...portExplained(p.port, p.service) })),
       rate: {
         perMinute: Math.round((dailyReports / 1440) * 10) / 10,
@@ -1269,6 +1311,7 @@ const FEED_LABELS = Object.freeze({
   c2intel: 'C2IntelFeeds',
   malpedia: 'Malpedia',
   exposure: 'Shodan exposure counts (free)',
+  censys: 'Censys exposure counts (second opinion)',
   cins: 'CINS Army (attacker IPs)',
   et: 'Emerging Threats (compromised IPs)',
   blocklistAll: 'blocklist.de (all attackers)',
@@ -1283,6 +1326,7 @@ const FEED_KEYS = Object.freeze({
   bgp: 'CLOUDFLARE_API_TOKEN',
   malwarebazaar: 'ABUSECH_AUTH_KEY',
   exposure: 'SHODAN_API_KEY',
+  censys: 'CENSYS_API_ID',
 });
 
 /** EPSS line for a CVE, as an alert detail. */
